@@ -6,6 +6,6 @@ The current version suffers from some delay problems probably associated with th
 
 The computation of the waveform is implemented in waveform.cpp, waveform.h, linearSynthesis.cpp and linearSynthesis.h. The files ADSRenvelope.cpp and ADSRenvelope.h implement data structures and computation for the ADSR envelope. Assembly of the raw audio data is performed in outputQt.cpp and outputQt.h. The MIDI control is implemented with ALSA in midiThread.cpp and midiThread.h.
 
-The files ADSRplot.*, ADSRwidget.*, kbWidget.*, mainWindow.*, waveformPlot.*, waveformWidget.* implement the widgets for the GUI. Interaction with the QAudioOutput is implemented in mainWindow.*.
+The files ADSRplot.\*, ADSRwidget.\*, kbWidget.\*, mainWindow.\*, waveformPlot.\*, waveformWidget.\* implement the widgets for the GUI. Interaction with the QAudioOutput is implemented in mainWindow.\*.
 
 ![ScreenShot](https://raw.github.com/vsr83/miniSynth/master/scrshot.png)
