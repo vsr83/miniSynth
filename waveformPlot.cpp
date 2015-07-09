@@ -21,7 +21,7 @@
 WaveformPlot::WaveformPlot(QWidget *parent) : QWidget(parent) {
     waveForm = 0;
     border = 5;
-    setMode(MODE_SIN);
+    setMode(Waveform::MODE_SIN);
 }
 
 WaveformPlot::~WaveformPlot() {

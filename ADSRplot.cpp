@@ -78,7 +78,6 @@ ADSRPlot::refreshPixmap() {
                           - (unsigned int)((qreal)wh * envelope.sustainAmpl);
 
     painter.setPen(penGrid);
-//    painter.drawLine(0, border + wh, width(), border + wh);
     painter.drawLine(border, initialy, ww+border, initialy);
     painter.drawLine(border, sustainy, ww+border, sustainy);
     painter.drawLine(border, peaky, ww+border, peaky);
@@ -102,7 +101,6 @@ ADSRPlot::refreshPixmap() {
     painter.drawLine(attackx, peaky, decayx, sustainy);
     painter.drawLine(decayx, sustainy, releasex, sustainy);
     painter.drawLine(releasex, sustainy, border+ww, border+wh);
-
 
     update();
 }

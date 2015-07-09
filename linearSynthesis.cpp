@@ -36,8 +36,6 @@ LinearSynthesis::setTimbre(QVector<int> &amplitudes, QVector<int> &phases) {
     timbreAmplitudes = amplitudes;
     timbrePhases = phases;
     numHarmonics = timbreAmplitudes.size();
-
-//    qDebug() << numHarmonics;
 }
 
 LinearSynthesis::~LinearSynthesis() {
@@ -53,8 +51,6 @@ LinearSynthesis::evalTimbre(qreal t) {
         if (qa_int > 0) {
             qreal qa = (qreal)qa_int/100,
                   qp = (2*M_PI*(qreal)qp_int)/360;
-
-          //  qDebug() << harm << qa << qp;
 
             val += qa * eval(((qreal)harm + 1) * t - qp);
         }

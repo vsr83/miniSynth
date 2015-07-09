@@ -34,14 +34,14 @@ WaveformWidget::WaveformWidget(QWidget *parent) : QWidget(parent) {
     vbox->addWidget(squButton);
     vbox->addWidget(sawButton);
 
-    oscMode = MODE_SIN;
+    oscMode = Waveform::MODE_SIN;
     sinButton->toggle();
 }
 
 void
 WaveformWidget::toggleSin(bool st) {
     if (st) {
-        oscMode = MODE_SIN;
+        oscMode = Waveform::MODE_SIN;
         emit modeSelected(oscMode);
     }
 }
@@ -49,7 +49,7 @@ WaveformWidget::toggleSin(bool st) {
 void
 WaveformWidget::toggleSqu(bool st) {
     if (st) {
-        oscMode = MODE_SQU;
+        oscMode = Waveform::MODE_SQU;
         emit modeSelected(oscMode);
     }
 }
@@ -57,7 +57,7 @@ WaveformWidget::toggleSqu(bool st) {
 void
 WaveformWidget::toggleSaw(bool st) {
     if (st) {
-        oscMode = MODE_SAW;
+        oscMode = Waveform::MODE_SAW;
         emit modeSelected(oscMode);
     }
 }

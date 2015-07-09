@@ -35,13 +35,10 @@ MidiThread::run() {
 
   int status = snd_rawmidi_open(&midi_in, NULL, portname.toStdString().c_str(), mode);
   if (status < 0) {
-    std::cerr << "Problem opening MIDI input: "
-              << snd_strerror(status)
-              << std::endl;
+    qWarning() << "Problem opening MIDI input: "
+               << snd_strerror(status);
     return;
-    //exit(1);
   }
-  qDebug() << "open";
   while (1) {
     unsigned char buffer[3];
     int status = snd_rawmidi_read(midi_in, buffer, 3);

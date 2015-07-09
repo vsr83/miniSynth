@@ -20,6 +20,8 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 
+#include "waveform.h"
+
 #ifndef WAVEFORMWIDGET_H
 #define WAVEFORMWIDGET_H
 
@@ -28,8 +30,6 @@ class WaveformWidget : public QWidget {
 public:
     WaveformWidget(QWidget *parent = 0);
     ~WaveformWidget();
-
-    enum {MODE_SIN, MODE_SAW, MODE_SQU};
 public slots:
 private slots:
     void toggleSin(bool st);

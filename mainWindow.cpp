@@ -46,7 +46,6 @@ MainWindow::MainWindow(QWidget *parent)
     gridWidget->setLayout(gridLayout);
     setCentralWidget(gridWidget);
 
-
     QGroupBox *waveFormGroup = new QGroupBox(tr("Oscillator"));
     QHBoxLayout *hbox = new QHBoxLayout;
     hbox->addWidget(waveformWidget);
@@ -66,14 +65,9 @@ MainWindow::MainWindow(QWidget *parent)
     timbreGroup->setLayout(hbox3);
     gridLayout->addWidget(timbreGroup, 1, 0, 1, 2);
 
-//    QGroupBox *kbGroup = new QGroupBox(tr("Timbre"));
-//    QHBoxLayout *hbox4 = new QHBoxLayout;
-//    hbox4->addWidget(kbWidget);
-//    kbGroup->setLayout(hbox4);
 
     gridLayout->addWidget(kbWidget, 2, 0, 1, 2);
     gridLayout->setRowMinimumHeight(2, 100);
-//    kbWidget->show();
 
     bufferSize = 16384;
 
@@ -97,7 +91,6 @@ MainWindow::MainWindow(QWidget *parent)
     m_audioOutput = new QAudioOutput(m_device, m_format, this);
     m_audioOutput->setBufferSize(bufferSize);
     m_generator   = new Generator(m_format, this);
-//    connect(m_audioOutput, SIGNAL(notify()), SLOT(notified()));
     m_generator->start();
     m_audioOutput->start(m_generator);
     m_audioOutput->setVolume(1);

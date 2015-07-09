@@ -30,7 +30,6 @@ class WaveformPlot : public QWidget {
 public:
     WaveformPlot(QWidget *parent = 0);
     ~WaveformPlot();
-    enum {MODE_SIN, MODE_SAW, MODE_SQU};
 
 public slots:
     void setMode(int _mode);

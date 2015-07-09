@@ -119,7 +119,6 @@ Generator::generateData(qint64 len) {
 
     unsigned int numSamples = len/2;
     m_buffer.resize(len);
-//    format = _format;
     qreal attackTime  = 0.001*(qreal)env.attackTime,
           decayTime   = 0.001*(qreal)env.decayTime,
           releaseTime = 0.001*(qreal)env.releaseTime;
@@ -132,7 +131,6 @@ Generator::generateData(qint64 len) {
         qreal freq = 8.175 * qPow(2, ((qreal)wav.note)/12);
         qreal ampl = 0.5*((qreal)wav.vel)/256;
 
-//        qDebug() << wav.note << curtime;
         qreal age = wav.state_age;
 
         for (unsigned int sample = 0; sample < numSamples; sample++) {
@@ -161,7 +159,10 @@ Generator::generateData(qint64 len) {
                 i.remove();
             } else {
                 qreal envVal = env.eval(envt, wav.state);
-                floatData[sample] += envVal * ampl * linSyn->evalTimbre(2*M_PI*freq*t);
+                qreal newVal = envVal * ampl * linSyn->evalTimbre(2*M_PI*freq*t);
+                qreal oldVal = floatData[sample];
+
+                floatData[sample] = newVal + oldVal;
             }
         }
         if (wav.state != ADSREnvelope::STATE_OFF) {
