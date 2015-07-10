@@ -45,14 +45,20 @@ ModulationWidget::ModulationWidget(QWidget *parent) : QWidget(parent) {
     gridLayout->addWidget(FMamplSlider, 2, 2, 1, 1);
     gridLayout->addWidget(FMpropfreq,   3, 1, 1, 2);
     FMfreqSlider->setRange(0, 1000);
-    FMamplSlider->setRange(0, 100);
+    FMamplSlider->setRange(-100, 0);
+    FMamplSlider->setValue(-100);
+    FMamplSlider->setTickInterval(20);
+    FMamplSlider->setTickPosition(QSlider::TicksBothSides);
 
     gridLayout->addWidget(AMfreqLabel,  1, 3, 1, 1);
     gridLayout->addWidget(AMamplLabel,  2, 3, 1, 1);
     gridLayout->addWidget(AMfreqSlider, 1, 4, 1, 1);
     gridLayout->addWidget(AMamplSlider, 2, 4, 1, 1);
     AMfreqSlider->setRange(0, 1000);
-    AMamplSlider->setRange(0, 100);
+    AMamplSlider->setRange(-100, 0);
+    AMamplSlider->setValue(-100);
+    AMamplSlider->setTickInterval(20);
+    AMamplSlider->setTickPosition(QSlider::TicksBothSides);
 
     connect(FMpropfreq, SIGNAL(stateChanged(int)), this,
             SLOT(parametersChanged(int)));
@@ -78,25 +84,24 @@ ModulationWidget::parametersChanged(int) {
     Modulation mod;
     mod.mode = waveformWidget->getMode();
 
+    qreal AM_ampl_dB = (qreal)AMamplSlider->value();
+    qreal FM_ampl_dB = (qreal)FMamplSlider->value();
+
     mod.AM_freq = 0.01 * AMfreqSlider->value();
-    mod.AM_ampl = 0.01 * (qreal)AMamplSlider->value();
+    mod.AM_ampl =  qPow(10, AM_ampl_dB/20);
 
     mod.FM_freq = 0.01 * FMfreqSlider->value();
     mod.propFreq = FMpropfreq->checkState() == Qt::Checked;
-    if (mod.propFreq) {
-        mod.FM_ampl = 0.001 * (qreal)FMamplSlider->value();
-    } else {
-        mod.FM_ampl = 0.01 * (qreal)FMamplSlider->value();
-    }
+    mod.FM_ampl = qPow(10, FM_ampl_dB/20);
 
     QString strFM;
     QTextStream(&strFM) << "FM - Freq : " << mod.FM_freq
-                        << " Ampl : " << mod.FM_ampl;
+                        << " Ampl : " << FM_ampl_dB << " dB";
     FMtitle->setText(strFM);
 
     QString strAM;
     QTextStream(&strAM) << "AM - Freq : " << mod.AM_freq
-                        << " Ampl : " << mod.AM_ampl;
+                        << " Ampl : " << AM_ampl_dB << " dB";
     AMtitle->setText(strAM);
 
     emit setModulation(mod);

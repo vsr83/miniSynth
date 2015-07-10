@@ -162,7 +162,7 @@ Generator::generateData(qint64 len) {
             } else {
                 qreal freqmod = 0, amod = 0;
 
-                if (mod.FM_ampl > 0) {
+                if (mod.FM_freq > 0) {
                     if (mod.propFreq) {
                         freqmod = mod.FM_ampl
                                 * mod_waveform->eval(2*M_PI*mod.FM_freq*freq*t);
@@ -171,7 +171,7 @@ Generator::generateData(qint64 len) {
                                 * mod_waveform->eval(2*M_PI*mod.FM_freq*t);
                     }
                 }
-                if (mod.AM_ampl > 0) {
+                if (mod.AM_freq > 0) {
                     amod = mod.AM_ampl * mod_waveform->eval(2*M_PI*mod.AM_freq*t);
                 }
 
