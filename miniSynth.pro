@@ -31,7 +31,9 @@ SOURCES += main.cpp\
     waveform.cpp \
     waveformPlot.cpp \
     waveformWidget.cpp \
-    outputQt.cpp
+    outputQt.cpp \
+    modulationWidget.cpp \
+    modulation.cpp
 
 HEADERS  += mainWindow.h \
     ADSRenvelope.h \
@@ -44,4 +46,6 @@ HEADERS  += mainWindow.h \
     waveform.h \
     waveformPlot.h \
     waveformWidget.h \
-    outputQt.h
+    outputQt.h \
+    modulationWidget.h \
+    modulation.h

@@ -15,36 +15,37 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef MODULATIONWIDGET_H
+#define MODULATIONWIDGET_H
+
 #include <QWidget>
-#include <QRadioButton>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
+#include <QSlider>
+#include <QCheckBox>
+#include <QLabel>
+#include <QGridLayout>
+#include "waveformWidget.h"
+#include "modulation.h"
 
-#include "waveform.h"
-
-#ifndef WAVEFORMWIDGET_H
-#define WAVEFORMWIDGET_H
-
-class WaveformWidget : public QWidget {
+class ModulationWidget : public QWidget {
     Q_OBJECT
 public:
-    WaveformWidget(QWidget *parent = 0);
-    ~WaveformWidget();
-
-    int getMode();
-public slots:
-private slots:
-    void toggleSin(bool st);
-    void toggleSqu(bool st);
-    void toggleSaw(bool st);
+    ModulationWidget(QWidget *parent = 0);
+    ~ModulationWidget();
 signals:
-    void modeSelected(int mode);
+    void setModulation(Modulation &modulation);
+private slots:
+    void parametersChanged(int);
 private:
-    int oscMode;
+    WaveformWidget *waveformWidget;
 
-    QVBoxLayout *vbox;
-    QHBoxLayout *hbox;
-    QRadioButton *sinButton, *squButton, *sawButton;
+    QGridLayout *gridLayout;
+    QSlider *FMfreqSlider, *FMamplSlider;
+    QLabel  *FMfreqLabel, *FMamplLabel, *FMtitle;
+    QCheckBox *FMpropfreq;
+
+    QSlider *AMfreqSlider, *AMamplSlider;
+    QLabel  *AMfreqLabel, *AMamplLabel, *AMtitle;
+    QCheckBox *AMpropfreq;
 };
 
-#endif // WAVEFORMWIDGET_H
+#endif // MODULATIONWIDGET_H

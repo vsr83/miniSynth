@@ -20,25 +20,28 @@
 
 #include <qmath.h>
 #include <math.h>
-#include <QVector>
-#include <QObject>
+
+// The Waveform class implements the necessary code for the generation of the
+// basic waveforms. The waveform is computed at the constructor stage and
+// assembled into a wavetable, which is evaluated with the eval(qreal t)
+// function.
 
 class Waveform  {
 public:
     Waveform(unsigned int mode, unsigned int size=4096);
-    ~Waveform();
+    ~Waveform();    
 
+    qreal eval(qreal t);
+    int mode;
+
+    enum {MODE_SIN, MODE_SAW, MODE_SQU};
+private:
     qreal waveSin(qreal t);
     qreal waveSaw(qreal t);
     qreal waveSqu(qreal t);
 
-    qreal eval(qreal t);
-
-    enum {MODE_SIN, MODE_SAW, MODE_SQU};
-private:
-    qreal *waveBank;
-    unsigned int bankSize;
-    int mode;
+    qreal *waveTable;
+    unsigned int tableSize;
 };
 
 #endif // WAVEFORM_H

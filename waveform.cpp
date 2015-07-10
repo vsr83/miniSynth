@@ -20,28 +20,29 @@
 #include <QDebug>
 
 Waveform::Waveform(unsigned int mode, unsigned int size) {
-    waveBank = new qreal[size];
-    bankSize = size;
+    waveTable = new qreal[size];
+    tableSize = size;
 
-    for (unsigned int sample = 0; sample < bankSize; sample++) {
-        qreal t = (2*M_PI * (qreal)sample) / ((qreal)bankSize);
+    for (unsigned int sample = 0; sample < tableSize; sample++) {
+        qreal u = (2*M_PI * (qreal)sample) / ((qreal)tableSize);
 
         switch(mode) {
         case MODE_SIN:
-            waveBank[sample] = waveSin(t);
+            waveTable[sample] = waveSin(u);
             break;
         case MODE_SAW:
-            waveBank[sample] = waveSaw(t);
+            waveTable[sample] = waveSaw(u);
             break;
         case MODE_SQU:
-            waveBank[sample] = waveSqu(t);
+            waveTable[sample] = waveSqu(u);
             break;
         }
     }
 }
 
 Waveform::~Waveform() {
-    delete [] waveBank;
+    delete [] waveTable;
+    waveTable = 0;
 }
 
 qreal
@@ -65,29 +66,30 @@ Waveform::waveSqu(qreal t) {
     }
 }
 
-// Perform linear interpolation between points of the wave bank.
 
 qreal
 Waveform::eval(qreal t) {
     qreal tmod = fmod((double)t, 2*M_PI);
     if (tmod < 0) tmod += 2*M_PI;
 
-    qreal indF = ((qreal)bankSize) * tmod / (2*(qreal)M_PI);
+    // Position indexed by a continuous variable does not generally fall on
+    // integer-valued points. Here indF is the "continuous-valued position"
+    // of the argument and is somewhere between the integers qFloor(indF) and
+    // qCeil(indF). When indF is not an integer, we use linear interpolation
+    // to obtain the appropriate value.
 
-    if (indF == (qreal)bankSize) indF = 0;
-
-    if (indF< 0) qDebug() << t << tmod << indF;
-    if (indF >= (qreal)bankSize) qDebug() << indF << bankSize;
+    qreal indF = ((qreal)tableSize) * tmod / (2*(qreal)M_PI);
+    if (indF == (qreal)tableSize) indF = 0;
 
     Q_ASSERT(indF >= 0);
-    Q_ASSERT(indF < (qreal)bankSize);
+    Q_ASSERT(indF < (qreal)tableSize);
 
     unsigned int ind_min = (unsigned int) qFloor(indF);
     unsigned int ind_max = (unsigned int) qCeil(indF);
 
     Q_ASSERT(ind_min <= ind_max);
-    Q_ASSERT(ind_max <= bankSize);
-    Q_ASSERT(ind_min < bankSize);
+    Q_ASSERT(ind_max <= tableSize);
+    Q_ASSERT(ind_min < tableSize);
 
     qreal indmod = indF - (qreal)ind_min;
     Q_ASSERT(indmod < 1 && indmod >= 0);
@@ -95,18 +97,18 @@ Waveform::eval(qreal t) {
     qreal value_next, value_prev;
 
     if (ind_min == ind_max) {
-        return waveBank[ind_min];
+        return waveTable[ind_min];
 
-    } else if (ind_max == bankSize) {
-        value_prev = waveBank[ind_min];
-        value_next = waveBank[0];
+    } else if (ind_max == tableSize) {
+        value_prev = waveTable[ind_min];
+        value_next = waveTable[0];
     } else if (ind_min < ind_max) {
-        Q_ASSERT(ind_max < bankSize);
-        value_prev = waveBank[ind_min];
-        value_next = waveBank[ind_max];
+        Q_ASSERT(ind_max < tableSize);
+        value_prev = waveTable[ind_min];
+        value_next = waveTable[ind_max];
     } else {
         // This shouldn't be reached;
-        qCritical("Wave Bank Interpolation Failed");
+        qCritical("Wave Table Interpolation Failed");
         QCoreApplication::exit(-1);
     }
     return indmod * value_next + (1-indmod) * value_prev;

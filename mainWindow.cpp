@@ -66,8 +66,16 @@ MainWindow::MainWindow(QWidget *parent)
     gridLayout->addWidget(timbreGroup, 1, 0, 1, 2);
 
 
-    gridLayout->addWidget(kbWidget, 2, 0, 1, 2);
-    gridLayout->setRowMinimumHeight(2, 100);
+    modulationWidget = new ModulationWidget;
+    QGroupBox *modulationGroup = new QGroupBox(tr("Modulation"));
+    QHBoxLayout *hbox4 = new QHBoxLayout;
+    hbox4->addWidget(modulationWidget);
+    modulationGroup->setLayout(hbox4);
+
+    gridLayout->addWidget(modulationGroup, 2, 0, 1, 2);
+
+    gridLayout->addWidget(kbWidget, 3, 0, 1, 2);
+    gridLayout->setRowMinimumHeight(3, 100);
 
     bufferSize = 16384;
 
@@ -105,6 +113,8 @@ MainWindow::MainWindow(QWidget *parent)
             m_generator, SLOT(setMode(int)));
     connect(envelopeWidget, SIGNAL(envelopeChanged(ADSREnvelope&)),
             m_generator, SLOT(setEnvelope(ADSREnvelope&)));
+    connect(modulationWidget, SIGNAL(setModulation(Modulation &)),
+            m_generator, SLOT(setModulation(Modulation &)));
 
 #ifdef MIDI_ALSA
     midiThread = new MidiThread(tr("hw:1,0,0"));

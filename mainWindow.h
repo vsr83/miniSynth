@@ -30,6 +30,7 @@
 #include "ADSRwidget.h"
 #include "kbWidget.h"
 #include "outputQt.h"
+#include "modulationWidget.h"
 
 #ifdef MIDI_ALSA
 #include "midiThread.h"
@@ -45,11 +46,12 @@ public:
 private:
     unsigned int bufferSize;
 
-    TimbreWidget   *timbreWidget;
-    WaveformWidget *waveformWidget;
-    WaveformPlot   *waveformPlot;
-    ADSRWidget     *envelopeWidget;
-    KBWidget       *kbWidget;
+    TimbreWidget     *timbreWidget;
+    WaveformWidget   *waveformWidget;
+    WaveformPlot     *waveformPlot;
+    ADSRWidget       *envelopeWidget;
+    ModulationWidget *modulationWidget;
+    KBWidget         *kbWidget;
 
     Generator       *m_generator;
     QAudioDeviceInfo m_device;

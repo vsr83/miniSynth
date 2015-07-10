@@ -38,6 +38,11 @@ WaveformWidget::WaveformWidget(QWidget *parent) : QWidget(parent) {
     sinButton->toggle();
 }
 
+int
+WaveformWidget::getMode() {
+    return oscMode;
+}
+
 void
 WaveformWidget::toggleSin(bool st) {
     if (st) {

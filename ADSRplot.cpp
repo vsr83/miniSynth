@@ -86,9 +86,9 @@ ADSRPlot::refreshPixmap() {
     painter.drawLine(releasex, border/2, releasex, wh + border);
 
     painter.setPen(penBorder);
-    painter.drawText(0, initialy, tr("I"));
-    painter.drawText(0, sustainy, tr("S"));
-    painter.drawText(0, peaky,    tr("P"));
+    painter.drawText(border/4, initialy+5, tr("I"));
+    painter.drawText(border/4, sustainy+5, tr("S"));
+    painter.drawText(border/4, peaky+5,    tr("P"));
     painter.drawText(attackx/2,  wh+border*2, tr("A"));
     painter.drawText((attackx + decayx)/2,   wh+border*2, tr("D"));
     painter.drawText((ww + border + releasex)/2, wh+border*2, tr("R"));

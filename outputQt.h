@@ -28,6 +28,7 @@
 
 #include "linearSynthesis.h"
 #include "ADSRenvelope.h"
+#include "modulation.h"
 
 class Wave {
 public:
@@ -57,9 +58,11 @@ public:
 public slots:
     void noteOn   (unsigned char chan, unsigned char note, unsigned char vel);
     void noteOff  (unsigned char chan, unsigned char note);
-    void setMode  (int _mode);
-    void setTimbre(QVector<int> &amplitudes, QVector<int> &phases);
-    void setEnvelope(ADSREnvelope &env);
+
+    void setMode      (int _mode);
+    void setTimbre    (QVector<int> &amplitudes, QVector<int> &phases);
+    void setEnvelope  (ADSREnvelope &env);
+    void setModulation(Modulation &modulation);
 private:
     QAudioFormat format;
     QByteArray m_buffer;
@@ -67,6 +70,8 @@ private:
     QList<Wave> waveList;
     LinearSynthesis *linSyn;
     ADSREnvelope env;
+    Modulation   mod;
+    Waveform    *mod_waveform;
 };
 
 #endif // OUTPUTQT_H

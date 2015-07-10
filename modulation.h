@@ -15,36 +15,22 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QWidget>
-#include <QRadioButton>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
+#ifndef MODULATION_H
+#define MODULATION_H
 
+#include <qmath.h>
 #include "waveform.h"
 
-#ifndef WAVEFORMWIDGET_H
-#define WAVEFORMWIDGET_H
-
-class WaveformWidget : public QWidget {
-    Q_OBJECT
+class Modulation {
 public:
-    WaveformWidget(QWidget *parent = 0);
-    ~WaveformWidget();
+    Modulation();
+    ~Modulation();
 
-    int getMode();
-public slots:
-private slots:
-    void toggleSin(bool st);
-    void toggleSqu(bool st);
-    void toggleSaw(bool st);
-signals:
-    void modeSelected(int mode);
-private:
-    int oscMode;
+    unsigned int mode;
+    qreal FM_freq, FM_ampl;
+    qreal AM_freq, AM_ampl;
 
-    QVBoxLayout *vbox;
-    QHBoxLayout *hbox;
-    QRadioButton *sinButton, *squButton, *sawButton;
+    bool propFreq;
 };
 
-#endif // WAVEFORMWIDGET_H
+#endif // MODULATION_H

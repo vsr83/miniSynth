@@ -32,6 +32,8 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
     env.initialAmpl = 0;
     env.peakAmpl = 1;
     env.sustainAmpl = 0.8;
+
+    mod_waveform = new Waveform(Waveform::MODE_SIN);
 }
 
 Generator::~Generator() {
@@ -158,8 +160,24 @@ Generator::generateData(qint64 len) {
             if (wav.state == ADSREnvelope::STATE_OFF) {
                 i.remove();
             } else {
+                qreal freqmod = 0, amod = 0;
+
+                if (mod.FM_ampl > 0) {
+                    if (mod.propFreq) {
+                        freqmod = mod.FM_ampl
+                                * mod_waveform->eval(2*M_PI*mod.FM_freq*freq*t);
+                    } else {
+                        freqmod = mod.FM_ampl
+                                * mod_waveform->eval(2*M_PI*mod.FM_freq*t);
+                    }
+                }
+                if (mod.AM_ampl > 0) {
+                    amod = mod.AM_ampl * mod_waveform->eval(2*M_PI*mod.AM_freq*t);
+                }
+
                 qreal envVal = env.eval(envt, wav.state);
-                qreal newVal = envVal * ampl * linSyn->evalTimbre(2*M_PI*freq*t);
+                qreal newVal = envVal * (ampl + amod)
+                             * linSyn->evalTimbre(2*M_PI*(freq+freqmod)*t);
                 qreal oldVal = floatData[sample];
 
                 floatData[sample] = newVal + oldVal;
@@ -189,4 +207,17 @@ Generator::generateData(qint64 len) {
 void
 Generator::setEnvelope(ADSREnvelope &_env) {
     env = _env;
+}
+
+void
+Generator::setModulation(Modulation &modulation) {
+    if (modulation.mode != mod_waveform->mode) {
+//        qDebug() << "MODE" << modulation.mode;
+        delete mod_waveform;
+        mod_waveform = new Waveform(modulation.mode);
+    }
+    mod = modulation;
+//    qDebug() << mod.propFreq
+//             << mod.AM_ampl << mod.AM_freq
+//             << mod.FM_ampl << mod.FM_freq;
 }
