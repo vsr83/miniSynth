@@ -8,7 +8,7 @@ QT       += core gui multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += midi_alsa
+#CONFIG += midi_alsa
 
 midi_alsa {
 DEFINES += MIDI_ALSA
