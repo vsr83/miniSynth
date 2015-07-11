@@ -31,6 +31,7 @@
 #include "kbWidget.h"
 #include "outputQt.h"
 #include "modulationWidget.h"
+#include "fftplot.h"
 
 #ifdef MIDI_ALSA
 #include "midiThread.h"
@@ -52,6 +53,9 @@ private:
     ADSRWidget       *envelopeWidget;
     ModulationWidget *modulationWidget;
     KBWidget         *kbWidget;
+#ifdef USE_FFTW
+    FFTPlot          *fftPlot;
+#endif
 
     Generator       *m_generator;
     QAudioDeviceInfo m_device;

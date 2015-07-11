@@ -30,6 +30,10 @@
 #include "ADSRenvelope.h"
 #include "modulation.h"
 
+#ifdef USE_FFTW
+#include <fftw3.h>
+#endif
+
 class Wave {
 public:
     enum {STATE_OFF, STATE_ATTACK, STATE_DECAY, STATE_RELEASE};
@@ -55,6 +59,10 @@ public:
 
     void generateData(qint64 len);
     qreal curtime;
+signals:
+#ifdef USE_FFTW
+    void fftUpdate(fftw_complex *out, unsigned int size);
+#endif
 public slots:
     void noteOn   (unsigned char chan, unsigned char note, unsigned char vel);
     void noteOff  (unsigned char chan, unsigned char note);
@@ -72,6 +80,16 @@ private:
     ADSREnvelope env;
     Modulation   mod;
     Waveform    *mod_waveform;
+
+    bool use_convolution;
+    qreal *convBuffer, *convImpulse;
+    unsigned int convBuffer_size;
+    quint32 convBuffer_ind;
+
+#ifdef USE_FFTW
+    fftw_complex *fftwIn, *fftwOut;
+    fftw_plan     fftwPlan;
+#endif
 };
 
 #endif // OUTPUTQT_H

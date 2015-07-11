@@ -19,6 +19,7 @@
 #include "outputQt.h"
 #include <qendian.h>
 #include <QDebug>
+#include <QFile>
 
 Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(parent) {
     format = _format;
@@ -34,10 +35,49 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
     env.sustainAmpl = 0.8;
 
     mod_waveform = new Waveform(Waveform::MODE_SIN);
+
+    use_convolution = true;
+    convBuffer_size = 44100;
+    convBuffer      = new qreal[convBuffer_size];
+    convImpulse     = new qreal[convBuffer_size];
+    convBuffer_ind  = 0;
+    for (unsigned int indconv = 0; indconv < convBuffer_size; indconv++) {
+        convBuffer[indconv]  = 0;
+        convImpulse[indconv] = 0;
+    }
+/*
+    QFile file("hst.mat");
+    if (!file.open(QIODevice::ReadOnly)) {
+        exit(0);
+    }
+    QTextStream in(&file);
+
+    int ind = 0;
+    while (!in.atEnd()) {
+        QString line = in.readLine();
+        qDebug() << line.toDouble();
+        convImpulse[ind++] = 20*line.toDouble();
+        if (ind == convBuffer_size) break;
+    }
+*/
+#ifdef USE_FFTW
+    fftwIn  = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*convBuffer_size);
+    fftwOut = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*convBuffer_size);
+    fftwPlan= fftw_plan_dft_1d(convBuffer_size, fftwIn, fftwOut,
+                                FFTW_FORWARD, FFTW_ESTIMATE);
+#endif
 }
 
 Generator::~Generator() {
     delete linSyn;
+    delete [] convBuffer;
+    delete [] convImpulse;
+
+#ifdef USE_FFTW
+    fftw_destroy_plan(fftwPlan);
+    fftw_free(fftwIn);
+    fftw_free(fftwOut);
+#endif
 }
 
 void
@@ -84,6 +124,7 @@ Generator::bytesAvailable() const {
 void
 Generator::noteOn(unsigned char chan, unsigned char note, unsigned char vel) {
     qDebug() << "NOTEON" << chan << note << vel;
+    if (vel > 0) vel = 255;
     addWave(note, vel);
     Q_UNUSED(chan);
 }
@@ -127,6 +168,7 @@ Generator::generateData(qint64 len) {
     Q_UNUSED(decayTime);
 
     QVector<qreal> floatData = QVector<qreal>(numSamples, 0);
+    //qDebug() << numSamples;
 
     while (i.hasNext()) {
         Wave wav = i.next();
@@ -188,6 +230,34 @@ Generator::generateData(qint64 len) {
             i.setValue(wav);
         }
     }
+
+    for (int sample = 0; sample < numSamples; sample++) {
+        convBuffer[convBuffer_ind] = floatData[sample];
+/*
+        qreal out = 0;
+        for (int convind = 0; convind < convBuffer_size; convind ++) {
+            // The term convBuffer_size keeps the left side non-negative and avoids
+            // negative results from the modulo operator.
+            if (convImpulse[convind] != 0) {
+                int bufind = (convBuffer_ind + convBuffer_size - convind) % convBuffer_size;
+
+                out += convImpulse[convind] * convBuffer[bufind];
+            }
+        }
+        floatData[sample] = out;
+        */
+        convBuffer_ind = (convBuffer_ind + 1) % convBuffer_size;
+    }
+#ifdef USE_FFTW
+    if (numSamples > 4096) {
+        for (unsigned int convind = 0; convind < convBuffer_size; convind++) {
+            fftwIn[convind][0] = convBuffer[convind];
+            fftwIn[convind][1] = 0;
+        }
+        fftw_execute(fftwPlan);
+        emit fftUpdate(fftwOut, convBuffer_size);
+    }
+#endif
 
     const int channelBytes = format.sampleSize() / 8;
     const int sampleBytes  = format.channelCount() * channelBytes;

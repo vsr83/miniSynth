@@ -50,20 +50,20 @@ MainWindow::MainWindow(QWidget *parent)
     QHBoxLayout *hbox = new QHBoxLayout;
     hbox->addWidget(waveformWidget);
     waveFormGroup->setLayout(hbox);
-    gridLayout->addWidget(waveFormGroup, 0, 0);
+    gridLayout->addWidget(waveFormGroup, 1, 0);
 
     QGroupBox *envelopeGroup = new QGroupBox(tr("Envelope"));
     QHBoxLayout *hbox2 = new QHBoxLayout;
     hbox2->addWidget(envelopeWidget);
     envelopeGroup->setLayout(hbox2);
-    gridLayout->addWidget(envelopeGroup, 0, 1);
+    gridLayout->addWidget(envelopeGroup, 1, 1);
 
     QGroupBox *timbreGroup = new QGroupBox(tr("Timbre"));
     QHBoxLayout *hbox3 = new QHBoxLayout;
     hbox3->addWidget(timbreWidget);
     hbox3->addWidget(waveformPlot);
     timbreGroup->setLayout(hbox3);
-    gridLayout->addWidget(timbreGroup, 1, 0, 1, 2);
+    gridLayout->addWidget(timbreGroup, 2, 0, 1, 2);
 
 
     modulationWidget = new ModulationWidget;
@@ -72,12 +72,20 @@ MainWindow::MainWindow(QWidget *parent)
     hbox4->addWidget(modulationWidget);
     modulationGroup->setLayout(hbox4);
 
-    gridLayout->addWidget(modulationGroup, 2, 0, 1, 2);
+    gridLayout->addWidget(modulationGroup, 3, 0, 1, 2);
 
-    gridLayout->addWidget(kbWidget, 3, 0, 1, 2);
-    gridLayout->setRowMinimumHeight(3, 100);
+    gridLayout->addWidget(kbWidget, 4, 0, 1, 2);
+    gridLayout->setRowMinimumHeight(4, 100);
 
-    bufferSize = 16384;
+#ifdef USE_FFTW
+    fftPlot = new FFTPlot();
+    gridLayout->addWidget(fftPlot, 0, 0, 1, 2);
+    gridLayout->setRowMinimumHeight(0, 150);
+#else
+
+#endif
+
+    bufferSize = 8192;
 
     m_format.setSampleRate(44100);
     m_format.setChannelCount(1);
@@ -115,7 +123,10 @@ MainWindow::MainWindow(QWidget *parent)
             m_generator, SLOT(setEnvelope(ADSREnvelope&)));
     connect(modulationWidget, SIGNAL(setModulation(Modulation &)),
             m_generator, SLOT(setModulation(Modulation &)));
-
+#ifdef USE_FFTW
+    connect(m_generator, SIGNAL(fftUpdate(fftw_complex*,uint)),
+            fftPlot, SLOT(fftUpdate(fftw_complex*,uint)));
+#endif
 #ifdef MIDI_ALSA
     midiThread = new MidiThread(tr("hw:1,0,0"));
     midiThread->start();

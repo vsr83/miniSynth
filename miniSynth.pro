@@ -8,7 +8,14 @@ QT       += core gui multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-#CONFIG += midi_alsa
+CONFIG += midi_alsa
+#CONFIG += use_fftw
+QMAKE_CXXFLAGS = -O3
+
+use_fftw {
+DEFINES += USE_FFTW
+LIBS += -lfftw3 -lm
+}
 
 midi_alsa {
 DEFINES += MIDI_ALSA
@@ -33,7 +40,8 @@ SOURCES += main.cpp\
     waveformWidget.cpp \
     outputQt.cpp \
     modulationWidget.cpp \
-    modulation.cpp
+    modulation.cpp \
+    fftplot.cpp
 
 HEADERS  += mainWindow.h \
     ADSRenvelope.h \
@@ -48,4 +56,5 @@ HEADERS  += mainWindow.h \
     waveformWidget.h \
     outputQt.h \
     modulationWidget.h \
-    modulation.h
+    modulation.h \
+    fftplot.h
