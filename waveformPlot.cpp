@@ -47,7 +47,7 @@ WaveformPlot::setTimbre(QVector<int> &amplitudes, QVector<int> &phases) {
 void
 WaveformPlot::refreshPixmap() {
     pixmap = QPixmap(size());
-    pixmap.fill();
+    pixmap.fill(palette().color(QPalette::Window));
 
     QPainter painter(&pixmap);
 

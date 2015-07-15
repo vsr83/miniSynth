@@ -47,7 +47,7 @@ FFTPlot::FFTPlot(unsigned int _numPlots, qreal _periodLength, QWidget *parent)
     minfreq = 10;
     maxfreq = 10000;
 
-    minampl = 1e-5;
+    minampl = 1e-6;
     maxampl = 0.201;
 }
 

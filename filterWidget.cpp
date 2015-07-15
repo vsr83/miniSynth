@@ -208,7 +208,7 @@ FilterWidget::~FilterWidget() {
 
 void
 FilterWidget::updateParameters() {
-    qreal tw;
+    qreal tw = 0;
     QString filterName, windowName, freqLabel;
 
     switch (filterParameters.type) {

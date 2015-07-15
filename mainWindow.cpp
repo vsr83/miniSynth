@@ -88,7 +88,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 #ifdef USE_FFTW
     fftPlot = new FFTPlot(3, 0.25);
-    gridLayout->addWidget(fftPlot, 1, 2, 1, 1);
+    gridLayout->addWidget(fftPlot, 0, 2, 2, 1);
     gridLayout->setColumnMinimumWidth(2, 600);
 
     QPen thinPen;

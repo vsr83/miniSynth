@@ -23,6 +23,7 @@
 
 ADSRPlot::ADSRPlot(QWidget *parent) : QWidget(parent) {
     border = 15;
+    bgColor = palette().color(QPalette::Window);
 }
 
 ADSRPlot::~ADSRPlot() {
@@ -37,7 +38,7 @@ ADSRPlot::setValues(ADSREnvelope &_envelope) {
 void
 ADSRPlot::refreshPixmap() {
     pixmap = QPixmap(size());
-    pixmap.fill();
+    pixmap.fill(bgColor);
 
     QPainter painter(&pixmap);
 

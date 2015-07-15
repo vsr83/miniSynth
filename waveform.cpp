@@ -33,6 +33,9 @@ Waveform::Waveform(unsigned int mode, unsigned int size) {
         case MODE_SAW:
             waveTable[sample] = waveSaw(u);
             break;
+        case MODE_SAW2:
+            waveTable[sample] = waveSaw2(u);
+            break;
         case MODE_SQU:
             waveTable[sample] = waveSqu(u);
             break;
@@ -54,6 +57,12 @@ qreal
 Waveform::waveSaw(qreal t) {
     qreal tmod = (qreal)(fmod((double)t, 2*M_PI) - M_PI);
     return tmod / M_PI;
+}
+
+qreal
+Waveform::waveSaw2(qreal t) {
+    qreal tmod = (qreal)(fmod((double)t, 2*M_PI) - M_PI);
+    return 1 - 2 * qAbs(tmod) / M_PI;
 }
 
 qreal

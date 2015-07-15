@@ -34,9 +34,10 @@ public:
     int getMode();
 public slots:
 private slots:
-    void toggleSin(bool st);
-    void toggleSqu(bool st);
-    void toggleSaw(bool st);
+    void toggleSin (bool st);
+    void toggleSqu (bool st);
+    void toggleSaw (bool st);
+    void toggleSaw2(bool st);
 signals:
     void modeSelected(int mode);
 private:
@@ -44,7 +45,7 @@ private:
 
     QVBoxLayout *vbox;
     QHBoxLayout *hbox;
-    QRadioButton *sinButton, *squButton, *sawButton;
+    QRadioButton *sinButton, *squButton, *sawButton, *saw2Button;
 };
 
 #endif // WAVEFORMWIDGET_H

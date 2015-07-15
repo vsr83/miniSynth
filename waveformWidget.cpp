@@ -24,15 +24,18 @@ WaveformWidget::WaveformWidget(QWidget *parent) : QWidget(parent) {
     sinButton = new QRadioButton(tr("Sinusoidal"));
     squButton = new QRadioButton(tr("Square"));
     sawButton = new QRadioButton(tr("Saw"));
+    saw2Button = new QRadioButton(tr("Saw2"));
 
     connect(sinButton, SIGNAL(toggled(bool)), this, SLOT(toggleSin(bool)));
     connect(sawButton, SIGNAL(toggled(bool)), this, SLOT(toggleSaw(bool)));
     connect(squButton, SIGNAL(toggled(bool)), this, SLOT(toggleSqu(bool)));
+    connect(saw2Button, SIGNAL(toggled(bool)), this, SLOT(toggleSaw2(bool)));
 
     setLayout(vbox);
     vbox->addWidget(sinButton);
     vbox->addWidget(squButton);
     vbox->addWidget(sawButton);
+    vbox->addWidget(saw2Button);
 
     oscMode = Waveform::MODE_SIN;
     sinButton->toggle();
@@ -66,6 +69,15 @@ WaveformWidget::toggleSaw(bool st) {
         emit modeSelected(oscMode);
     }
 }
+
+void
+WaveformWidget::toggleSaw2(bool st) {
+    if (st) {
+        oscMode = Waveform::MODE_SAW2;
+        emit modeSelected(oscMode);
+    }
+}
+
 
 WaveformWidget::~WaveformWidget() {
 }

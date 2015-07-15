@@ -36,6 +36,7 @@ private:
     void refreshPixmap();
     ADSREnvelope envelope;
 
+    QColor bgColor;
     QPixmap pixmap;
     int border;
 };

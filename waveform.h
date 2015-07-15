@@ -34,11 +34,12 @@ public:
     qreal eval(qreal t);
     unsigned int mode;
 
-    enum {MODE_SIN, MODE_SAW, MODE_SQU};
+    enum {MODE_SIN, MODE_SAW, MODE_SQU, MODE_SAW2};
 private:
-    qreal waveSin(qreal t);
-    qreal waveSaw(qreal t);
-    qreal waveSqu(qreal t);
+    qreal waveSin (qreal t);
+    qreal waveSaw (qreal t);
+    qreal waveSqu (qreal t);
+    qreal waveSaw2(qreal t);
 
     qreal *waveTable;
     unsigned int tableSize;
