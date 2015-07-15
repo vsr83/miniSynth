@@ -246,7 +246,7 @@ KBWidget::findKey(unsigned int x, unsigned int y) {
 //    qDebug() << x << y;
 
     for (unsigned int layer = 1; layer <= 2; layer++) {
-        for (unsigned int note = minnote; note < maxnote; note++) {
+        for (unsigned int note = minnote; note <= maxnote; note++) {
             if (layer == keyLayer[note]) {
                 QRectF keyRect = keyRects[note];
 

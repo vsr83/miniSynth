@@ -106,7 +106,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 #endif
 
-    bufferSize = 8192;
+    bufferSize = 8192*2;
 
     m_format.setSampleRate(44100);
     m_format.setChannelCount(1);

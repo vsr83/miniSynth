@@ -133,6 +133,7 @@ Generator::addWave(unsigned char note, unsigned char vel) {
 
 qint64
 Generator::readData(char *data, qint64 len) {
+    if (len > 4096) len = 4096;
     generateData(len);
     memcpy(data, m_buffer.constData(), len);
     curtime += (qreal)len/(44100*2);
@@ -165,7 +166,7 @@ Generator::noteOff(unsigned char chan, unsigned char note) {
 
     while (i.hasNext()) {
         Wave wav = i.next();
-        if (wav.note == note) {
+        if (wav.note == note && wav.state != Wave::STATE_RELEASE) {
             wav.state = Wave::STATE_RELEASE;
             wav.state_age = 0;
         }
@@ -286,7 +287,7 @@ Generator::generateData(qint64 len) {
         convBuffer_ind = (convBuffer_ind + 1) % convBuffer_size;
     }
 #ifdef USE_FFTW
-    if (numSamples > 4096) {
+    if (numSamples > 2047) {
         for (unsigned int convind = 0; convind < convBuffer_size; convind++) {
             fftwIn[convind][0] = convBuffer[convind];
             fftwIn[convind][1] = 0;
