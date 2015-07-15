@@ -17,6 +17,7 @@
 
 
 #include "outputQt.h"
+#include "filter.h"
 #include <qendian.h>
 #include <QDebug>
 #include <QFile>
@@ -37,15 +38,44 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
     mod_waveform = new Waveform(Waveform::MODE_SIN);
 
     use_convolution = true;
-    convBuffer_size = 44100;
+    convBuffer_size = 44100/4;
     convBuffer      = new qreal[convBuffer_size];
-    convImpulse     = new qreal[convBuffer_size];
+    filtBuffer      = new qreal[convBuffer_size];
     convBuffer_ind  = 0;
     for (unsigned int indconv = 0; indconv < convBuffer_size; indconv++) {
         convBuffer[indconv]  = 0;
-        convImpulse[indconv] = 0;
+        filtBuffer[indconv]  = 0;
     }
-/*
+
+    filter      = 0;
+    convImpulse = 0;
+
+//    filter = new Filter(Filter::FILTER_OFF, Filter::WINDOW_RECT, 1, 44100, 0);
+    FilterParameters param;
+    param.freq1 = param.freq2 = 0;
+    param.samplingRate = 44100;
+    param.size         = 1;
+    param.type         = Filter::FILTER_OFF;
+    param.window_type  = Filter::WINDOW_RECT;
+
+    qDebug() << "setFilter";
+    setFilter(param);
+    qDebug() << "setFilter-";
+//    convImpulse_size= filt.size;
+//    convImpulse     = new qreal[convImpulse_size];
+//    for (unsigned int ind = 0; ind < convImpulse_size; ind++) {
+//        convImpulse[ind] = filt.IR[ind];
+//    }
+
+
+    /*
+    convImpulse_size= 1;
+    convImpulse     = new qreal[convImpulse_size];
+    convImpulse[0] = 1;
+//    convImpulse[199] = 0.5;
+   */
+
+    /*
     QFile file("hst.mat");
     if (!file.open(QIODevice::ReadOnly)) {
         exit(0);
@@ -57,7 +87,7 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
         QString line = in.readLine();
         qDebug() << line.toDouble();
         convImpulse[ind++] = 20*line.toDouble();
-        if (ind == convBuffer_size) break;
+        if (ind == convImpulse_size) break;
     }
 */
 #ifdef USE_FFTW
@@ -158,8 +188,6 @@ Generator::setTimbre(QVector<int> &amplitudes, QVector<int> &phases) {
 
 void
 Generator::generateData(qint64 len) {
-    QMutableListIterator<Wave> i(waveList);
-
     unsigned int numSamples = len/2;
     m_buffer.resize(len);
     qreal attackTime  = 0.001*(qreal)env.attackTime,
@@ -167,43 +195,50 @@ Generator::generateData(qint64 len) {
           releaseTime = 0.001*(qreal)env.releaseTime;
     Q_UNUSED(decayTime);
 
-    QVector<qreal> floatData = QVector<qreal>(numSamples, 0);
+    // Raw synthesized data is assembled into synthData. This data is then
+    // filtered and assembled into filteredData.
+    QVector<qreal> synthData    = QVector<qreal>(numSamples, 0),
+                   filteredData = QVector<qreal>(numSamples, 0);
     //qDebug() << numSamples;
+
+    // All samples for each active note in waveList are synthesized separately.
+    QMutableListIterator<Wave> i(waveList);
 
     while (i.hasNext()) {
         Wave wav = i.next();
-        qreal freq = 8.175 * qPow(2, ((qreal)wav.note)/12);
+        qreal freq = 8.175 * 0.5 * qPow(2, ((qreal)wav.note)/12);
         qreal ampl = 0.5*((qreal)wav.vel)/256;
 
         qreal age = wav.state_age;
 
         for (unsigned int sample = 0; sample < numSamples; sample++) {
             qreal t = curtime + (qreal)sample / 44100;
-            qreal envt = age + (qreal)sample / 44100;
+            qreal envt = age  + (qreal)sample / 44100;
 
+            // Handle timed change of state in the ADSR-envelopes ATTACK->DECAY
+            // and RELEASE->OFF.
             switch(wav.state) {
             case ADSREnvelope::STATE_ATTACK:
-                //qDebug() << "ATTACK" << envt << env.attackTime;
                 if (envt > attackTime) {
                     age -= attackTime;
                     wav.state = ADSREnvelope::STATE_DECAY;
                     wav.state_age -= attackTime;
-                    qDebug() << "Decay";
                 }
                 break;
             case ADSREnvelope::STATE_RELEASE:
                 if (envt > releaseTime) {
-                    qDebug() << "OFF";
                     age = 0;
                     wav.state = ADSREnvelope::STATE_OFF;
                 }
                 break;
             }
+
             if (wav.state == ADSREnvelope::STATE_OFF) {
                 i.remove();
             } else {
                 qreal freqmod = 0, amod = 0;
 
+                // Compute modulation waves.
                 if (mod.FM_freq > 0) {
                     if (mod.propFreq) {
                         freqmod = mod.FM_ampl
@@ -217,12 +252,14 @@ Generator::generateData(qint64 len) {
                     amod = mod.AM_ampl * mod_waveform->eval(2*M_PI*mod.AM_freq*t);
                 }
 
+                // Evaluate the output wave for the current note and add to the
+                // output obtained with other notes.
                 qreal envVal = env.eval(envt, wav.state);
                 qreal newVal = envVal * (ampl + amod)
                              * linSyn->evalTimbre(2*M_PI*(freq+freqmod)*t);
-                qreal oldVal = floatData[sample];
+                qreal oldVal = synthData[sample];
 
-                floatData[sample] = newVal + oldVal;
+                synthData[sample] = newVal + oldVal;
             }
         }
         if (wav.state != ADSREnvelope::STATE_OFF) {
@@ -231,21 +268,21 @@ Generator::generateData(qint64 len) {
         }
     }
 
-    for (int sample = 0; sample < numSamples; sample++) {
-        convBuffer[convBuffer_ind] = floatData[sample];
-/*
-        qreal out = 0;
-        for (int convind = 0; convind < convBuffer_size; convind ++) {
+    for (unsigned int sample = 0; sample < numSamples; sample++) {
+        convBuffer[convBuffer_ind] = synthData[sample];
+        filteredData[sample] = 0;
+
+        for (unsigned int convind = 0; convind < convImpulse_size; convind ++) {
             // The term convBuffer_size keeps the left side non-negative and avoids
             // negative results from the modulo operator.
             if (convImpulse[convind] != 0) {
                 int bufind = (convBuffer_ind + convBuffer_size - convind) % convBuffer_size;
 
-                out += convImpulse[convind] * convBuffer[bufind];
+                filteredData[sample] += convImpulse[convind] * convBuffer[bufind];
             }
         }
-        floatData[sample] = out;
-        */
+        filtBuffer[convBuffer_ind] = filteredData[sample];
+        //floatData[sample] = out;
         convBuffer_ind = (convBuffer_ind + 1) % convBuffer_size;
     }
 #ifdef USE_FFTW
@@ -255,7 +292,24 @@ Generator::generateData(qint64 len) {
             fftwIn[convind][1] = 0;
         }
         fftw_execute(fftwPlan);
-        emit fftUpdate(fftwOut, convBuffer_size);
+        emit fftUpdate(fftwOut, convBuffer_size, 0);
+        for (unsigned int convind = 0; convind < convBuffer_size; convind++) {
+//            fftwIn[convind][0] = convBuffer[convind];
+            fftwIn[convind][0] = filtBuffer[convind];
+            fftwIn[convind][1] = 0;
+        }
+        fftw_execute(fftwPlan);
+        emit fftUpdate(fftwOut, convBuffer_size, 1);
+        for (unsigned int convind = 0; convind < convBuffer_size; convind++) {
+            fftwIn[convind][0] = 0;
+            fftwIn[convind][1] = 0;
+        }
+        for (unsigned int convind = 0; convind < convImpulse_size; convind++) {
+            fftwIn[convind][0] = 2*(convBuffer_size/(M_PI*M_PI))*convImpulse[convind];
+            fftwIn[convind][1] = 0;
+        }
+        fftw_execute(fftwPlan);
+        emit fftUpdate(fftwOut, convBuffer_size, 2);
     }
 #endif
 
@@ -266,9 +320,9 @@ Generator::generateData(qint64 len) {
     unsigned char *ptr = reinterpret_cast<unsigned char *>(m_buffer.data());
 
     for (unsigned int sample = 0; sample < numSamples; sample++) {
-        if (floatData[sample] > 1) floatData[sample] = 1;
-        if (floatData[sample] < -1) floatData[sample] = -1;
-        qint16 value = static_cast<qint16>(floatData[sample] * 32767);
+        if (filteredData[sample] > 1)  filteredData[sample] = 1;
+        if (filteredData[sample] < -1) filteredData[sample] = -1;
+        qint16 value = static_cast<qint16>(filteredData[sample] * 32767);
         qToLittleEndian<qint16>(value, ptr);
         ptr += channelBytes;
     }
@@ -290,4 +344,18 @@ Generator::setModulation(Modulation &modulation) {
 //    qDebug() << mod.propFreq
 //             << mod.AM_ampl << mod.AM_freq
 //             << mod.FM_ampl << mod.FM_freq;
+}
+
+void
+Generator::setFilter(FilterParameters &filtParam) {
+    if (filter)      delete filter;
+    if (convImpulse) delete [] convImpulse;
+
+    filter = new Filter(filtParam.type, filtParam.window_type, filtParam.size,
+                        44100, filtParam.freq1, filtParam.freq2);
+    convImpulse_size= filter->size;
+    convImpulse     = new qreal[convImpulse_size];
+    for (unsigned int ind = 0; ind < convImpulse_size; ind++) {
+        convImpulse[ind] = filter->IR[ind];
+    }
 }

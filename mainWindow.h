@@ -32,6 +32,7 @@
 #include "outputQt.h"
 #include "modulationWidget.h"
 #include "fftplot.h"
+#include "filterWidget.h"
 
 #ifdef MIDI_ALSA
 #include "midiThread.h"
@@ -56,6 +57,7 @@ private:
 #ifdef USE_FFTW
     FFTPlot          *fftPlot;
 #endif
+    FilterWidget     *filterWidget;
 
     Generator       *m_generator;
     QAudioDeviceInfo m_device;

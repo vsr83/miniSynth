@@ -29,6 +29,7 @@
 #include "linearSynthesis.h"
 #include "ADSRenvelope.h"
 #include "modulation.h"
+#include "filter.h"
 
 #ifdef USE_FFTW
 #include <fftw3.h>
@@ -61,7 +62,7 @@ public:
     qreal curtime;
 signals:
 #ifdef USE_FFTW
-    void fftUpdate(fftw_complex *out, unsigned int size);
+    void fftUpdate(fftw_complex *out, unsigned int size, unsigned int ind_dataset);
 #endif
 public slots:
     void noteOn   (unsigned char chan, unsigned char note, unsigned char vel);
@@ -71,6 +72,8 @@ public slots:
     void setTimbre    (QVector<int> &amplitudes, QVector<int> &phases);
     void setEnvelope  (ADSREnvelope &env);
     void setModulation(Modulation &modulation);
+
+    void setFilter    (FilterParameters &filtParam);
 private:
     QAudioFormat format;
     QByteArray m_buffer;
@@ -82,9 +85,11 @@ private:
     Waveform    *mod_waveform;
 
     bool use_convolution;
-    qreal *convBuffer, *convImpulse;
-    unsigned int convBuffer_size;
+    qreal *convBuffer, *filtBuffer, *convImpulse;
+    unsigned int convBuffer_size, convImpulse_size;
     quint32 convBuffer_ind;
+
+    Filter *filter;
 
 #ifdef USE_FFTW
     fftw_complex *fftwIn, *fftwOut;

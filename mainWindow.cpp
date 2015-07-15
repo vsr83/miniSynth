@@ -50,20 +50,20 @@ MainWindow::MainWindow(QWidget *parent)
     QHBoxLayout *hbox = new QHBoxLayout;
     hbox->addWidget(waveformWidget);
     waveFormGroup->setLayout(hbox);
-    gridLayout->addWidget(waveFormGroup, 1, 0);
+    gridLayout->addWidget(waveFormGroup, 0, 0);
 
     QGroupBox *envelopeGroup = new QGroupBox(tr("Envelope"));
     QHBoxLayout *hbox2 = new QHBoxLayout;
     hbox2->addWidget(envelopeWidget);
     envelopeGroup->setLayout(hbox2);
-    gridLayout->addWidget(envelopeGroup, 1, 1);
+    gridLayout->addWidget(envelopeGroup, 0, 1);
 
     QGroupBox *timbreGroup = new QGroupBox(tr("Timbre"));
     QHBoxLayout *hbox3 = new QHBoxLayout;
     hbox3->addWidget(timbreWidget);
     hbox3->addWidget(waveformPlot);
     timbreGroup->setLayout(hbox3);
-    gridLayout->addWidget(timbreGroup, 2, 0, 1, 2);
+    gridLayout->addWidget(timbreGroup, 1, 0, 1, 2);
 
 
     modulationWidget = new ModulationWidget;
@@ -72,15 +72,36 @@ MainWindow::MainWindow(QWidget *parent)
     hbox4->addWidget(modulationWidget);
     modulationGroup->setLayout(hbox4);
 
-    gridLayout->addWidget(modulationGroup, 3, 0, 1, 2);
+    gridLayout->addWidget(modulationGroup, 2, 0, 1, 2);
 
-    gridLayout->addWidget(kbWidget, 4, 0, 1, 2);
-    gridLayout->setRowMinimumHeight(4, 100);
+    gridLayout->addWidget(kbWidget, 3, 0, 1, 2);
+    gridLayout->setRowMinimumHeight(3, 100);
+
+    filterWidget = new FilterWidget;
+    QGroupBox *filterGroup = new QGroupBox(tr("Filter"));
+    QHBoxLayout *hbox5 = new QHBoxLayout;
+    hbox5->addWidget(filterWidget);
+    filterGroup->setLayout(hbox5);
+    gridLayout->addWidget(filterGroup, 2, 2, 2, 1);
+
+
 
 #ifdef USE_FFTW
-    fftPlot = new FFTPlot();
-    gridLayout->addWidget(fftPlot, 0, 0, 1, 2);
-    gridLayout->setRowMinimumHeight(0, 150);
+    fftPlot = new FFTPlot(3, 0.25);
+    gridLayout->addWidget(fftPlot, 1, 2, 1, 1);
+    gridLayout->setColumnMinimumWidth(2, 600);
+
+    QPen thinPen;
+    thinPen.setStyle(Qt::SolidLine);
+    thinPen.setWidth(2);
+    thinPen.setColor(QColor(180, 180, 180));
+    fftPlot->setPen(0, thinPen);
+
+    QPen filterPen;
+    filterPen.setStyle(Qt::SolidLine);
+    filterPen.setWidth(1);
+    filterPen.setColor(QColor(180, 0, 0));
+    fftPlot->setPen(2, filterPen);
 #else
 
 #endif
@@ -123,9 +144,12 @@ MainWindow::MainWindow(QWidget *parent)
             m_generator, SLOT(setEnvelope(ADSREnvelope&)));
     connect(modulationWidget, SIGNAL(setModulation(Modulation &)),
             m_generator, SLOT(setModulation(Modulation &)));
+
+    connect(filterWidget, SIGNAL(parametersChanged(FilterParameters&)),
+            m_generator, SLOT(setFilter(FilterParameters&)));
 #ifdef USE_FFTW
-    connect(m_generator, SIGNAL(fftUpdate(fftw_complex*,uint)),
-            fftPlot, SLOT(fftUpdate(fftw_complex*,uint)));
+    connect(m_generator, SIGNAL(fftUpdate(fftw_complex*,uint, uint)),
+            fftPlot, SLOT(fftUpdate(fftw_complex*,uint, uint)));
 #endif
 #ifdef MIDI_ALSA
     midiThread = new MidiThread(tr("hw:1,0,0"));

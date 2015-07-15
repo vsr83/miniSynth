@@ -23,24 +23,34 @@
 #include <fftw3.h>
 #include <QWidget>
 #include <QPixmap>
+#include <QVector>
+#include <QPen>
 
 class FFTPlot : public QWidget {
     Q_OBJECT
 public:
-    FFTPlot(QWidget *parent = 0);
+    FFTPlot(unsigned int _numPlots, qreal _periodLength, QWidget *parent = 0);
     ~FFTPlot();
+    void setPen(unsigned int ind_plot, QPen pen);
+
 public slots:
-    void fftUpdate(fftw_complex *out, unsigned int size);
+    void fftUpdate     (fftw_complex *out, unsigned int size, unsigned int ind_dataset);
 protected:
     void paintEvent (QPaintEvent  *event);
     void resizeEvent(QResizeEvent *event);
 private:
     void refreshPixmap();
     QPixmap pixmap;
-    unsigned int fftsize;
-    qreal *fftampl;
 
-    int minfreq, maxfreq;
+    QVector <unsigned int> fftSizes;
+    QVector <qreal *>      fftAmpls;
+    QVector <QPen>         fftPens;
+
+    unsigned int numPlots;
+    QPen defaultPen;
+
+    qreal periodLength;
+    unsigned int minfreq, maxfreq;
     qreal minampl, maxampl;
 };
 

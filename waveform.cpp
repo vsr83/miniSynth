@@ -102,14 +102,16 @@ Waveform::eval(qreal t) {
     } else if (ind_max == tableSize) {
         value_prev = waveTable[ind_min];
         value_next = waveTable[0];
+        return indmod * value_next + (1-indmod) * value_prev;
     } else if (ind_min < ind_max) {
         Q_ASSERT(ind_max < tableSize);
         value_prev = waveTable[ind_min];
         value_next = waveTable[ind_max];
+        return indmod * value_next + (1-indmod) * value_prev;
     } else {
         // This shouldn't be reached;
         qCritical("Wave Table Interpolation Failed");
         QCoreApplication::exit(-1);
     }
-    return indmod * value_next + (1-indmod) * value_prev;
+    return 0;
 }

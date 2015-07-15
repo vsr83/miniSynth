@@ -8,8 +8,8 @@ QT       += core gui multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += midi_alsa
-#CONFIG += use_fftw
+#CONFIG += midi_alsa
+CONFIG += use_fftw
 QMAKE_CXXFLAGS = -O3
 
 use_fftw {
@@ -41,7 +41,9 @@ SOURCES += main.cpp\
     outputQt.cpp \
     modulationWidget.cpp \
     modulation.cpp \
-    fftplot.cpp
+    fftplot.cpp \
+    filter.cpp \
+    filterWidget.cpp
 
 HEADERS  += mainWindow.h \
     ADSRenvelope.h \
@@ -57,4 +59,6 @@ HEADERS  += mainWindow.h \
     outputQt.h \
     modulationWidget.h \
     modulation.h \
-    fftplot.h
+    fftplot.h \
+    filter.h \
+    filterWidget.h

@@ -25,18 +25,44 @@
 #include <qmath.h>
 #include <math.h>
 
-FFTPlot::FFTPlot(QWidget *parent) : QWidget(parent) {
-    fftsize = 0;
-    fftampl = 0;
-    minfreq = 42;
+FFTPlot::FFTPlot(unsigned int _numPlots, qreal _periodLength, QWidget *parent)
+    : QWidget(parent),
+      fftSizes(_numPlots, 0),
+      fftAmpls(_numPlots, 0),
+      fftPens (_numPlots) {
+
+    numPlots = _numPlots;
+    periodLength = _periodLength;
+
+//    fftSizes = new QVector<unsigned int>(numPlots, 0);
+//    fftAmpls = new QVector<qreal *>     (numPlots, 0);
+
+    defaultPen.setStyle(Qt::SolidLine);
+    defaultPen.setWidth(2);
+    defaultPen.setColor(QColor(0, 0, 0));
+    for (unsigned int ind_plot = 0; ind_plot < numPlots; ind_plot++) {
+        fftPens[ind_plot] = defaultPen;
+    }
+
+    minfreq = 10;
     maxfreq = 10000;
 
-    minampl = 1e-4;
-    maxampl = 0.5;
+    minampl = 1e-5;
+    maxampl = 0.201;
 }
 
 FFTPlot::~FFTPlot() {
-    delete [] fftampl;
+    for (unsigned int ind_plot = 0; ind_plot < numPlots; ind_plot++) {
+        qreal * fftampl = fftAmpls[ind_plot];
+        delete [] fftampl;
+        fftAmpls[ind_plot] = (qreal *)0;
+    }
+}
+
+void
+FFTPlot::setPen(unsigned int ind_plot, QPen pen) {
+    Q_ASSERT(ind_plot < numPlots);
+    fftPens[ind_plot] = pen;
 }
 
 void
@@ -44,76 +70,100 @@ FFTPlot::refreshPixmap() {
     pixmap = QPixmap(size());
     pixmap.fill();
 
+    int borderx = 40, bordery = 20, padding = 10, ticksize = 5;
+
     QPainter painter(&pixmap);
-    if (fftsize != 0) {
-        QPen penWave, penGrid, penBorder;
+    QPen penWave, penGrid, penBorder;
 
-        penWave.setStyle(Qt::SolidLine);
-        penWave.setWidth(2);
-        penWave.setColor(QColor(0, 0, 0));
+//    painter.setRenderHint(QPainter::Antialiasing, true);
 
-        penGrid.setStyle(Qt::DashLine);
-        penGrid.setWidth(1);
-        penGrid.setColor(QColor(150, 150, 150));
 
-        penBorder.setStyle(Qt::SolidLine);
-        penBorder.setWidth(1);
-        penBorder.setColor(QColor(150, 150, 150));
+    penGrid.setStyle(Qt::DashLine);
+    penGrid.setWidth(1);
+    penGrid.setColor(QColor(150, 150, 150));
 
-        int ww = width(), wh = height();
+    penBorder.setStyle(Qt::SolidLine);
+    penBorder.setWidth(1);
+    penBorder.setColor(QColor(150, 150, 150));
 
-        qreal minfl = (qreal) log10((double) minfreq),
-              maxfl = (qreal) log10((double) maxfreq);
-        qreal minampll = (qreal) log10((double)minampl),
-              maxampll = (qreal) log10((double)maxampl);
-        qreal minampldB = minampll * 20,
-              maxampldB = maxampll * 20;
+    int ww = width(), wh = height();
 
-        qreal sx = (qreal)ww / (maxfl - minfl),
-              sy = (qreal)wh / (maxampldB - minampldB);
+    qreal minfl = (qreal) log10((double) minfreq),
+          maxfl = (qreal) log10((double) maxfreq);
+    qreal minampll = (qreal) log10((double)minampl),
+          maxampll = (qreal) log10((double)maxampl);
+    qreal minampldB = minampll * 20,
+          maxampldB = maxampll * 20;
 
-       // qreal dx = ((qreal)width())/(qreal)fftsize*4;
-       // painter.drawLine(0, 0, width(), height());
+    qreal sx = (qreal)(ww - borderx - 2*padding) / (maxfl - minfl),
+          sy = (qreal)(wh - bordery - 2*padding) / (maxampldB - minampldB);
 
-        painter.setPen(penGrid);
-        for (int fl = qFloor(minfl); fl < qCeil(maxfl); fl++) {
-            for (int df = 1; df < 10; df++) {
-                qreal x = sx*(qreal)(log10((double)qPow(10, fl)*df) - minfl);
-                painter.drawLine((int)x, 0, (int)x, wh);
-            }
-        }
-        for (int al = qFloor(minampll); al < qCeil(maxampll); al++) {
-            for (int da = 1; da < 10; da++) {
-                qreal y = wh-(sy*20*(qreal)(log10(qPow(10, al)*da) - minampll));
-                painter.drawLine(0, y, ww, y);
-            }
-        }
-
-        painter.setPen(penBorder);
-        for (int fl = qFloor(minfl); fl < qCeil(maxfl); fl++) {
-            qreal x = sx*(qreal)(log10((double)qPow(10, fl)) - minfl);
-            painter.drawLine((int)x, 0, (int)x, wh);
-        }
-        for (int fl = qFloor(minfl); fl < qCeil(maxfl); fl++) {
-            qreal x = sx*(qreal)(log10((double)qPow(10, fl)) - minfl);
-            painter.drawLine((int)x, 0, (int)x, wh);
-        }
-
-        painter.setPen(penWave);
-
-        for (int ind = 1; ind < fftsize/2; ind++) {
-            qreal prevampl = wh-(sy*20*(qreal)(log10((double)fftampl[ind-1]) - minampll)),
-                  ampl =     wh-(sy*20*(qreal)(log10((double)fftampl[ind]) - minampll));
-            qreal x     = sx*(qreal)(log10((double)ind) - minfl),
-                  prevx = sx*(qreal)(log10((double)(ind+1)) - minfl);
-            QPointF pstart(prevx, prevampl),
-                    pend(x, ampl);
-            painter.drawLine(pstart, pend);
-//            qDebug() << dx*(qreal)ind << 100*ampl;
-//            qDebug() << (int)(100*prevampl);
-        }
-        update();
+    for (int fl = qFloor(minfl); fl < qCeil(maxfl); fl++) {
+        qreal x = padding + borderx
+                + sx*(qreal)(log10((double)qPow(10, fl)) - minfl);
+        QString str = QString("%1 Hz").arg(qPow(10, fl));
+        painter.drawText((int)x, wh-padding, str);
     }
+    for (int al = qFloor(minampll); al < qCeil(maxampll); al++) {
+        qreal y = wh - padding - bordery
+                - (sy*20*(qreal)(log10(qPow(10, al)) - minampll));
+        QString str = QString("%1 dB").arg(-20-20*al);
+        painter.drawText((int)padding, y+10, str);
+    }
+    painter.setPen(penBorder);
+    painter.drawLine(borderx+padding, padding, ww-padding, padding);
+    painter.drawLine(ww-padding, padding, ww-padding, wh-bordery-padding);
+    painter.drawLine(borderx+padding, wh-bordery-padding, ww-padding, wh-bordery-padding);
+
+    for (int fl = qFloor(minfl); fl < qCeil(maxfl); fl++) {
+        qreal x = padding+borderx+sx*(qreal)(log10((double)qPow(10, fl)) - minfl);
+        painter.drawLine((int)x, padding, (int)x, wh-bordery-padding+ticksize);
+    }
+    for (int al = qFloor(minampll); al < qCeil(maxampll); al++) {
+        qreal y = wh-padding-bordery-(sy*20*(qreal)(log10(qPow(10, al)) - minampll));
+        painter.drawLine((int)borderx+padding-ticksize, y, (int)ww-padding, y);
+    }
+
+    painter.setClipRect(borderx+padding, padding,
+                        ww-borderx-padding*2, wh-bordery-padding*2);
+    painter.setClipping(true);
+
+
+    painter.setPen(penGrid);
+    for (int fl = qFloor(minfl); fl < qCeil(maxfl); fl++) {
+        for (int df = 1; df < 10; df++) {
+            qreal x = borderx + padding
+                    + sx*(qreal)(log10((double)qPow(10, fl)*df) - minfl);
+            painter.drawLine((int)x, padding, (int)x, wh-bordery-padding);
+        }
+    }
+    for (int al = qFloor(minampll); al < qCeil(maxampll); al++) {
+        for (int da = 1; da < 10; da++) {
+            qreal y = wh - bordery - padding
+                    - (sy*20*(qreal)(log10(qPow(10, al)*da) - minampll));
+            painter.drawLine(borderx+padding, y, ww-padding, y);
+        }
+    }
+
+    for (unsigned int ind_plot = 0; ind_plot < numPlots; ind_plot++) {
+        qreal * fftampl = fftAmpls[ind_plot];
+        painter.setPen(fftPens[ind_plot]);
+
+        if (fftSizes[ind_plot] != 0 && fftampl != 0) {
+            for (unsigned int ind = 1; ind < fftSizes[ind_plot]/2; ind++) {
+                qreal prevampl = wh-padding-bordery
+                               - (sy*20*(qreal)(log10((double)fftampl[ind-1]) - minampll)),
+                      ampl     = wh-padding-bordery
+                               - (sy*20*(qreal)(log10((double)fftampl[ind]  ) - minampll));
+                qreal x     = borderx+(sx)*(qreal)(log10( ((double)ind)/periodLength) - minfl),
+                      prevx = borderx+(sx)*(qreal)(log10( ((double)(ind-1))/periodLength) - minfl);
+                QPointF pstart(prevx, prevampl),
+                        pend(x, ampl);
+            painter.drawLine(pstart, pend);
+            }
+        }
+    }
+   update();
 }
 
 void
@@ -130,19 +180,21 @@ FFTPlot::resizeEvent(QResizeEvent *event) {
 }
 
 void
-FFTPlot::fftUpdate(fftw_complex *out, unsigned int size) {
-//    qDebug() << "fftUpdate";
+FFTPlot::fftUpdate(fftw_complex *out, unsigned int size, unsigned int ind_dataset) {
+    Q_ASSERT(ind_dataset < numPlots);
 
-    if (fftsize != size) {
-        if (fftsize > 0) {
-            delete [] fftampl;
+    if (fftSizes[ind_dataset] != size) {
+        if (fftSizes[ind_dataset] > 0) {
+            delete [] fftAmpls[ind_dataset];
         }
-        fftsize = size;
-        fftampl = new qreal[fftsize];
+        fftSizes[ind_dataset] = size;
+        fftAmpls[ind_dataset] = new qreal[size];
     }
-    for (unsigned int ind=0; ind < fftsize; ind++) {
+    qreal *fftAmpl = fftAmpls[ind_dataset];
+    for (unsigned int ind=0; ind < fftSizes[ind_dataset]; ind++) {
         qreal re = out[ind][0], im = out[ind][1];
-        fftampl[ind] = qSqrt(re*re + im*im)/fftsize;
+
+        fftAmpl[ind] = 0.5*qSqrt(re*re + im*im)/fftSizes[ind_dataset];
     }
     refreshPixmap();
 }
