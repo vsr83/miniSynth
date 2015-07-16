@@ -30,6 +30,7 @@
 #include "ADSRenvelope.h"
 #include "modulation.h"
 #include "filter.h"
+#include "ADSRenvelope.h"
 
 #ifdef USE_FFTW
 #include <fftw3.h>
@@ -40,6 +41,7 @@ public:
     enum {STATE_OFF, STATE_ATTACK, STATE_DECAY, STATE_RELEASE};
     unsigned char note, vel, state;
     qreal state_age;
+    ADSREnvelope env;
 };
 
 class Generator : public QIODevice {
@@ -80,7 +82,7 @@ private:
 
     QList<Wave> waveList;
     LinearSynthesis *linSyn;
-    ADSREnvelope env;
+    ADSREnvelope defaultEnv;
     Modulation   mod;
     Waveform    *mod_waveform;
 

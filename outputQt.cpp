@@ -27,13 +27,13 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
     linSyn = new LinearSynthesis(Waveform::MODE_SIN);
     curtime = 0;
 
-    env.attackTime = 100;
-    env.decayTime = 400;
-    env.releaseTime = 100;
+    defaultEnv.attackTime = 100;
+    defaultEnv.decayTime = 400;
+    defaultEnv.releaseTime = 100;
 
-    env.initialAmpl = 0;
-    env.peakAmpl = 1;
-    env.sustainAmpl = 0.8;
+    defaultEnv.initialAmpl = 0;
+    defaultEnv.peakAmpl = 1;
+    defaultEnv.sustainAmpl = 0.8;
 
     mod_waveform = new Waveform(Waveform::MODE_SIN);
 
@@ -127,6 +127,7 @@ Generator::addWave(unsigned char note, unsigned char vel) {
     wav.note  = note;
     wav.vel   = vel;
     wav.state_age = 0;
+    wav.env = defaultEnv;
 
     waveList.push_back(wav);
 }
@@ -167,6 +168,7 @@ Generator::noteOff(unsigned char chan, unsigned char note) {
     while (i.hasNext()) {
         Wave wav = i.next();
         if (wav.note == note && wav.state != Wave::STATE_RELEASE) {
+            wav.env.sustainAmpl = wav.env.eval(wav.state_age, wav.state);
             wav.state = Wave::STATE_RELEASE;
             wav.state_age = 0;
         }
@@ -191,10 +193,6 @@ void
 Generator::generateData(qint64 len) {
     unsigned int numSamples = len/2;
     m_buffer.resize(len);
-    qreal attackTime  = 0.001*(qreal)env.attackTime,
-          decayTime   = 0.001*(qreal)env.decayTime,
-          releaseTime = 0.001*(qreal)env.releaseTime;
-    Q_UNUSED(decayTime);
 
     // Raw synthesized data is assembled into synthData. This data is then
     // filtered and assembled into filteredData.
@@ -207,6 +205,11 @@ Generator::generateData(qint64 len) {
 
     while (i.hasNext()) {
         Wave wav = i.next();
+        qreal attackTime  = 0.001*(qreal)wav.env.attackTime,
+              decayTime   = 0.001*(qreal)wav.env.decayTime,
+              releaseTime = 0.001*(qreal)wav.env.releaseTime;
+
+
         qreal freq = 8.175 * 0.5 * qPow(2, ((qreal)wav.note)/12);
         qreal ampl = 0.5*((qreal)wav.vel)/256;
 
@@ -224,6 +227,7 @@ Generator::generateData(qint64 len) {
                     age -= attackTime;
                     wav.state = ADSREnvelope::STATE_DECAY;
                     wav.state_age -= attackTime;
+                    envt = age  + (qreal)sample / 44100;
                 }
                 break;
             case ADSREnvelope::STATE_RELEASE:
@@ -255,12 +259,14 @@ Generator::generateData(qint64 len) {
 
                 // Evaluate the output wave for the current note and add to the
                 // output obtained with other notes.
-                qreal envVal = env.eval(envt, wav.state);
+                qreal envVal = wav.env.eval(envt, wav.state);
                 qreal newVal = envVal * (ampl + amod)
                              * linSyn->evalTimbre(2*M_PI*(freq+freqmod)*t);
                 qreal oldVal = synthData[sample];
 
                 synthData[sample] = newVal + oldVal;
+
+//                qDebug() << envVal;
             }
         }
         if (wav.state != ADSREnvelope::STATE_OFF) {
@@ -331,7 +337,7 @@ Generator::generateData(qint64 len) {
 
 void
 Generator::setEnvelope(ADSREnvelope &_env) {
-    env = _env;
+    defaultEnv = _env;
 }
 
 void
