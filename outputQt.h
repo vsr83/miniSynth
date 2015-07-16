@@ -36,6 +36,10 @@
 #include <fftw3.h>
 #endif
 
+// The state of each active note is described with an Wave object. Wave
+// objects are assembled into the QList<Wave> waveList and removed once
+// they reach the state STATE_OFF.
+
 class Wave {
 public:
     enum {STATE_OFF, STATE_ATTACK, STATE_DECAY, STATE_RELEASE};
@@ -43,6 +47,11 @@ public:
     qreal state_age;
     ADSREnvelope env;
 };
+
+// The synthesizer is implemented as a QIODevice and is connected to
+// a QAudioOutput in mainWindow.cpp. QAudioOutput reads data from the
+// synthersizer using the function readData(data, size). readData
+// returns maximum of 2048 samples generated with generateData(len).
 
 class Generator : public QIODevice {
     Q_OBJECT
@@ -61,7 +70,6 @@ public:
     qint64 bytesAvailable() const;
 
     void generateData(qint64 len);
-    qreal curtime;
 signals:
 #ifdef USE_FFTW
     void fftUpdate(fftw_complex *out, unsigned int size, unsigned int ind_dataset);
@@ -70,28 +78,42 @@ public slots:
     void noteOn   (unsigned char chan, unsigned char note, unsigned char vel);
     void noteOff  (unsigned char chan, unsigned char note);
 
+    // Slots for manipulation of the current patch.
     void setMode      (int _mode);
     void setTimbre    (QVector<int> &amplitudes, QVector<int> &phases);
     void setEnvelope  (ADSREnvelope &env);
     void setModulation(Modulation &modulation);
-
     void setFilter    (FilterParameters &filtParam);
 private:
     QAudioFormat format;
     QByteArray m_buffer;
 
+    // State of the syntheziser
+    qreal curtime;
     QList<Wave> waveList;
-    LinearSynthesis *linSyn;
-    ADSREnvelope defaultEnv;
-    Modulation   mod;
-    Waveform    *mod_waveform;
 
-    bool use_convolution;
-    qreal *convBuffer, *filtBuffer, *convImpulse;
-    unsigned int convBuffer_size, convImpulse_size;
+    // Parameters of the current patch
+    LinearSynthesis *linSyn;
+    ADSREnvelope     defaultEnv;
+    Modulation       mod;
+    Waveform        *mod_waveform;
+    Filter          *filter;
+
+    // convBuffer and filtBuffer are circular buffers used to store the
+    // previous convBuffer_size samples before and after convolution.
+    // Both buffers are used as inputs for the FFT in the computation of
+    // data for the fftUpdate signal. The data in convBuffer is also used
+    // in the computation of convolution. convBuffer_ind tells the location
+    // of the last added sample in the buffer.
+
+    qreal *convBuffer, *filtBuffer;
+    unsigned int convBuffer_size;
     quint32 convBuffer_ind;
 
-    Filter *filter;
+    // Impulse response for the current filter.
+
+    qreal *convImpulse;
+    unsigned int convImpulse_size;
 
 #ifdef USE_FFTW
     fftw_complex *fftwIn, *fftwOut;

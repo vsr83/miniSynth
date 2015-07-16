@@ -34,9 +34,6 @@ FFTPlot::FFTPlot(unsigned int _numPlots, qreal _periodLength, QWidget *parent)
     numPlots = _numPlots;
     periodLength = _periodLength;
 
-//    fftSizes = new QVector<unsigned int>(numPlots, 0);
-//    fftAmpls = new QVector<qreal *>     (numPlots, 0);
-
     defaultPen.setStyle(Qt::SolidLine);
     defaultPen.setWidth(2);
     defaultPen.setColor(QColor(0, 0, 0));

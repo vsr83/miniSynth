@@ -32,21 +32,18 @@ KBMIDIChannel::~KBMIDIChannel() {
 
 void
 KBWidget::paintEvent(QPaintEvent *) {
-//    qDebug() << "paintEvent";
     QStylePainter painter(this);
     painter.drawPixmap(0, 0, pixmap);
 }
 
 void
 KBWidget::resizeEvent(QResizeEvent *event) {
-//    qDebug() << "resizeEvent";
     refreshPixmap();
     Q_UNUSED(event);
 }
 
 void
 KBWidget::refreshPixmap() {
-//    qDebug() << "refreshPixmap";
     pixmap = QPixmap(size());
     pixmap.fill();
 
@@ -144,14 +141,12 @@ KBWidget::KBWidget() {
 
     mouse_curnote = mouse_startx = mouse_starty = mouse_startbutton = 0;
 
-    qDebug() << "KBWidget";
     channels.reserve(16);
     for (unsigned int chan = 1; chan <= 16; chan++) {
         KBMIDIChannel midichan;
         channels.push_back(midichan);
     }
     nchans = chanlist.length();
-    qDebug() << "KBWidget-";
 }
 
 KBWidget::~KBWidget() {
@@ -165,7 +160,6 @@ KBWidget::note_on(unsigned char chan, unsigned char note, unsigned char vel) {
     channels[chan - 1] = midichan;
     refreshPixmap();
     emit sig_note_on(chan, note, vel);
-//    qDebug() << "KBnoteon" << chan << note << vel;
 }
 
 void
@@ -176,7 +170,6 @@ KBWidget::note_off(unsigned char chan, unsigned char note) {
     channels[chan - 1] = midichan;
     refreshPixmap();
     emit sig_note_off(chan, note);
-//    qDebug() << "KBnoteoff" << chan << note;
 }
 
 unsigned char
@@ -243,16 +236,11 @@ unsigned int
 KBWidget::findKey(unsigned int x, unsigned int y) {
     int key = 0;
 
-//    qDebug() << x << y;
 
     for (unsigned int layer = 1; layer <= 2; layer++) {
         for (unsigned int note = minnote; note <= maxnote; note++) {
             if (layer == keyLayer[note]) {
                 QRectF keyRect = keyRects[note];
-
-//                qDebug() << note << keyRect.left() << keyRect.right()
-//                         << keyRect.bottom() << keyRect.top()
-//                         << x << y;
 
                 if (x > keyRect.left() && x <= keyRect.right() &&
                     y > keyRect.top() && y <= keyRect.bottom()) {

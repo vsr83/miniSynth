@@ -255,9 +255,6 @@ FilterWidget::updateParameters() {
         break;
     }
 
-//    QString str = QString("%1").arg((qreal)qRound(filterParameters.freq1*10)/10);
-//    paramLabel->setText(str);
-
     QString str2 = QString("Transition Width %1 Hz")
                    .arg(QString::number(tw, 'f', 1));
     paramLabel2->setText(str2);

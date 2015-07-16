@@ -37,11 +37,11 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
 
     mod_waveform = new Waveform(Waveform::MODE_SIN);
 
-    use_convolution = true;
     convBuffer_size = 44100/4;
     convBuffer      = new qreal[convBuffer_size];
     filtBuffer      = new qreal[convBuffer_size];
     convBuffer_ind  = 0;
+
     for (unsigned int indconv = 0; indconv < convBuffer_size; indconv++) {
         convBuffer[indconv]  = 0;
         filtBuffer[indconv]  = 0;
@@ -50,7 +50,6 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
     filter      = 0;
     convImpulse = 0;
 
-//    filter = new Filter(Filter::FILTER_OFF, Filter::WINDOW_RECT, 1, 44100, 0);
     FilterParameters param;
     param.freq1 = param.freq2 = 0;
     param.samplingRate = 44100;
@@ -58,38 +57,8 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
     param.type         = Filter::FILTER_OFF;
     param.window_type  = Filter::WINDOW_RECT;
 
-    qDebug() << "setFilter";
     setFilter(param);
-    qDebug() << "setFilter-";
-//    convImpulse_size= filt.size;
-//    convImpulse     = new qreal[convImpulse_size];
-//    for (unsigned int ind = 0; ind < convImpulse_size; ind++) {
-//        convImpulse[ind] = filt.IR[ind];
-//    }
 
-
-    /*
-    convImpulse_size= 1;
-    convImpulse     = new qreal[convImpulse_size];
-    convImpulse[0] = 1;
-//    convImpulse[199] = 0.5;
-   */
-
-    /*
-    QFile file("hst.mat");
-    if (!file.open(QIODevice::ReadOnly)) {
-        exit(0);
-    }
-    QTextStream in(&file);
-
-    int ind = 0;
-    while (!in.atEnd()) {
-        QString line = in.readLine();
-        qDebug() << line.toDouble();
-        convImpulse[ind++] = 20*line.toDouble();
-        if (ind == convImpulse_size) break;
-    }
-*/
 #ifdef USE_FFTW
     fftwIn  = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*convBuffer_size);
     fftwOut = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*convBuffer_size);
@@ -134,13 +103,19 @@ Generator::addWave(unsigned char note, unsigned char vel) {
 
 qint64
 Generator::readData(char *data, qint64 len) {
+    // QAudioOutput tends to ask large packets of data, which can lead to a
+    // large delay between noteOn requests and the generation of audio. Thus,
+    // in order to provide more responsive interface, the packet size is
+    // limited to 4096 bytes ~ 2048 samples.
     if (len > 4096) len = 4096;
+
     generateData(len);
     memcpy(data, m_buffer.constData(), len);
     curtime += (qreal)len/(44100*2);
     return len;
 }
 
+// Not used.
 qint64
 Generator::writeData(const char *data, qint64 len) {
     Q_UNUSED(data);
@@ -148,14 +123,21 @@ Generator::writeData(const char *data, qint64 len) {
     return 0;
 }
 
+// Doesn't seem to be called by QAudioOutput.
 qint64
 Generator::bytesAvailable() const {
+    qDebug() << "bytesAvailable()";
     return m_buffer.size() + QIODevice::bytesAvailable();
 }
 
 void
 Generator::noteOn(unsigned char chan, unsigned char note, unsigned char vel) {
     qDebug() << "NOTEON" << chan << note << vel;
+
+    // Velocity of 255 is assumed since a "pleasant" relationship between the
+    // velocity in the MIDI event and the parameters of the corresponding Wave
+    // cannot be currently selected by the user.
+
     if (vel > 0) vel = 255;
     addWave(note, vel);
     Q_UNUSED(chan);
@@ -168,7 +150,12 @@ Generator::noteOff(unsigned char chan, unsigned char note) {
     while (i.hasNext()) {
         Wave wav = i.next();
         if (wav.note == note && wav.state != Wave::STATE_RELEASE) {
+            // To avoid discontinuity in the envelope, the initial value for
+            // the release part of the envelope should be equal to current
+            // value.
+
             wav.env.sustainAmpl = wav.env.eval(wav.state_age, wav.state);
+
             wav.state = Wave::STATE_RELEASE;
             wav.state_age = 0;
         }
@@ -198,7 +185,6 @@ Generator::generateData(qint64 len) {
     // filtered and assembled into filteredData.
     QVector<qreal> synthData    = QVector<qreal>(numSamples, 0),
                    filteredData = QVector<qreal>(numSamples, 0);
-    //qDebug() << numSamples;
 
     // All samples for each active note in waveList are synthesized separately.
     QMutableListIterator<Wave> i(waveList);
@@ -206,7 +192,7 @@ Generator::generateData(qint64 len) {
     while (i.hasNext()) {
         Wave wav = i.next();
         qreal attackTime  = 0.001*(qreal)wav.env.attackTime,
-              decayTime   = 0.001*(qreal)wav.env.decayTime,
+//              decayTime   = 0.001*(qreal)wav.env.decayTime,
               releaseTime = 0.001*(qreal)wav.env.releaseTime;
 
 
@@ -244,6 +230,7 @@ Generator::generateData(qint64 len) {
                 qreal freqmod = 0, amod = 0;
 
                 // Compute modulation waves.
+
                 if (mod.FM_freq > 0) {
                     if (mod.propFreq) {
                         freqmod = mod.FM_ampl
@@ -259,14 +246,13 @@ Generator::generateData(qint64 len) {
 
                 // Evaluate the output wave for the current note and add to the
                 // output obtained with other notes.
+
                 qreal envVal = wav.env.eval(envt, wav.state);
                 qreal newVal = envVal * (ampl + amod)
                              * linSyn->evalTimbre(2*M_PI*(freq+freqmod)*t);
                 qreal oldVal = synthData[sample];
 
                 synthData[sample] = newVal + oldVal;
-
-//                qDebug() << envVal;
             }
         }
         if (wav.state != ADSREnvelope::STATE_OFF) {
@@ -279,17 +265,17 @@ Generator::generateData(qint64 len) {
         convBuffer[convBuffer_ind] = synthData[sample];
         filteredData[sample] = 0;
 
-        for (unsigned int convind = 0; convind < convImpulse_size; convind ++) {
-            // The term convBuffer_size keeps the left side non-negative and avoids
-            // negative results from the modulo operator.
+        for (unsigned int convind = 0; convind < convImpulse_size; convind ++) {            
             if (convImpulse[convind] != 0) {
+                // The term convBuffer_size keeps the left side non-negative and avoids
+                // negative results from the modulo operator.
+
                 int bufind = (convBuffer_ind + convBuffer_size - convind) % convBuffer_size;
 
                 filteredData[sample] += convImpulse[convind] * convBuffer[bufind];
             }
         }
         filtBuffer[convBuffer_ind] = filteredData[sample];
-        //floatData[sample] = out;
         convBuffer_ind = (convBuffer_ind + 1) % convBuffer_size;
     }
 #ifdef USE_FFTW
@@ -301,7 +287,6 @@ Generator::generateData(qint64 len) {
         fftw_execute(fftwPlan);
         emit fftUpdate(fftwOut, convBuffer_size, 0);
         for (unsigned int convind = 0; convind < convBuffer_size; convind++) {
-//            fftwIn[convind][0] = convBuffer[convind];
             fftwIn[convind][0] = filtBuffer[convind];
             fftwIn[convind][1] = 0;
         }
@@ -320,10 +305,9 @@ Generator::generateData(qint64 len) {
     }
 #endif
 
-    const int channelBytes = format.sampleSize() / 8;
-    const int sampleBytes  = format.channelCount() * channelBytes;
-    Q_UNUSED(sampleBytes);
+    // Convert data from qreal to qint16.
 
+    const int channelBytes = format.sampleSize() / 8;
     unsigned char *ptr = reinterpret_cast<unsigned char *>(m_buffer.data());
 
     for (unsigned int sample = 0; sample < numSamples; sample++) {
@@ -343,14 +327,10 @@ Generator::setEnvelope(ADSREnvelope &_env) {
 void
 Generator::setModulation(Modulation &modulation) {
     if (modulation.mode != mod_waveform->mode) {
-//        qDebug() << "MODE" << modulation.mode;
         delete mod_waveform;
         mod_waveform = new Waveform(modulation.mode);
     }
     mod = modulation;
-//    qDebug() << mod.propFreq
-//             << mod.AM_ampl << mod.AM_freq
-//             << mod.FM_ampl << mod.FM_freq;
 }
 
 void

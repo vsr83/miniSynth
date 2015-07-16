@@ -113,8 +113,6 @@ Filter::Filter(unsigned int _type, unsigned int _window_type, unsigned int _size
             break;
         }
 
-
-        qDebug() << ind_n;
         IR[ind_n] = v;
     }
 }
