@@ -33,6 +33,7 @@
 #include "modulationWidget.h"
 #include "fftplot.h"
 #include "filterWidget.h"
+#include "reverbWidget.h"
 
 #ifdef MIDI_ALSA
 #include "midiThread.h"
@@ -58,6 +59,7 @@ private:
     FFTPlot          *fftPlot;
 #endif
     FilterWidget     *filterWidget;
+    ReverbWidget     *reverbWidget;
 
     Generator       *m_generator;
     QAudioDeviceInfo m_device;

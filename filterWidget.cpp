@@ -106,7 +106,7 @@ FilterWidget::FilterWidget(QWidget *parent) : QWidget(parent) {
     gridLayout->addWidget(BlackmanButton, 4, 2, 1, 1);
     gridLayout->addWidget(KaiserButton,   5, 2, 1, 1);
 
-    gridLayout->setRowMinimumHeight(6, 70);
+//    gridLayout->setRowMinimumHeight(6, 70);
     gridLayout->addWidget(freqLabel1,  2, 4, 1, 1);
     gridLayout->addWidget(freqLabel2,  3, 4, 1, 1);
     gridLayout->addWidget(freqSlider1, 2, 5, 1, 1);

@@ -82,12 +82,18 @@ MainWindow::MainWindow(QWidget *parent)
     QHBoxLayout *hbox5 = new QHBoxLayout;
     hbox5->addWidget(filterWidget);
     filterGroup->setLayout(hbox5);
-    gridLayout->addWidget(filterGroup, 2, 2, 2, 1);
+    gridLayout->addWidget(filterGroup, 2, 2, 1, 1);
 
+    reverbWidget = new ReverbWidget(44100);
+    QGroupBox *reverbGroup = new QGroupBox(tr("Reverb"));
+    QHBoxLayout *hbox6 = new QHBoxLayout;
+    hbox6->addWidget(reverbWidget);
+    reverbGroup->setLayout(hbox6);
+    gridLayout->addWidget(reverbGroup, 3, 2, 1, 1);
 
 
 #ifdef USE_FFTW
-    fftPlot = new FFTPlot(3, 0.25);
+    fftPlot = new FFTPlot(3, 0.25);//2*2048.0/44100);
     gridLayout->addWidget(fftPlot, 0, 2, 2, 1);
     gridLayout->setColumnMinimumWidth(2, 600);
 
@@ -144,6 +150,8 @@ MainWindow::MainWindow(QWidget *parent)
             m_generator, SLOT(setEnvelope(ADSREnvelope&)));
     connect(modulationWidget, SIGNAL(setModulation(Modulation &)),
             m_generator, SLOT(setModulation(Modulation &)));
+    connect(reverbWidget, SIGNAL(setReverb(Reverb&)), m_generator,
+            SLOT(setReverb(Reverb&)));
 
     connect(filterWidget, SIGNAL(parametersChanged(FilterParameters&)),
             m_generator, SLOT(setFilter(FilterParameters&)));

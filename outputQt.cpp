@@ -37,16 +37,28 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
 
     fftTimer = 0;
 
+    rev.delay = 8000;
+    rev.active= false;
+    rev.attenuation = 1;
+    rev.samplingRate = 44100;
+
     mod_waveform = new Waveform(Waveform::MODE_SIN);
 
+    delayBuffer_size = 44100*2;
     convBuffer_size = 44100/4;
     convBuffer      = new qreal[convBuffer_size];
     filtBuffer      = new qreal[convBuffer_size];
+    delayBuffer     = new qreal[delayBuffer_size];
+
+    delayBuffer_ind = 0;
     convBuffer_ind  = 0;
 
     for (unsigned int indconv = 0; indconv < convBuffer_size; indconv++) {
         convBuffer[indconv]  = 0;
         filtBuffer[indconv]  = 0;
+    }
+    for (unsigned int indconv = 0; indconv < delayBuffer_size; indconv++) {
+        delayBuffer[indconv]  = 0;
     }
 
     filter      = 0;
@@ -127,7 +139,7 @@ Generator::readData(char *data, qint64 len) {
     // large delay between noteOn requests and the generation of audio. Thus,
     // in order to provide more responsive interface, the packet size is
     // limited to 4096 bytes ~ 2048 samples.
-    if (len > 2048) len = 2048;
+    if (len > 4096) len = 4096;
 
     generateData(len);
     memcpy(data, m_buffer.constData(), len);
@@ -299,10 +311,28 @@ Generator::generateData(qint64 len) {
                 filteredData[sample] += convImpulse[convind] * convBuffer[bufind];
             }
         }
-        filtBuffer[convBuffer_ind] = filteredData[sample];
-        convBuffer_ind = (convBuffer_ind + 1) % convBuffer_size;
+        delayBuffer[delayBuffer_ind] = filteredData[sample];
+        delayBuffer_ind = (delayBuffer_ind + 1) % delayBuffer_size;
+
+        // Primitive Reverb algorith.
+        if (rev.active) {
+            qreal reverb = 0;
+            unsigned int ind;
+            unsigned int nsteps = delayBuffer_size / rev.delay;
+
+            for (int delayInd = 0; delayInd < nsteps; delayInd ++) {
+                ind = (delayBuffer_ind + delayBuffer_size - 1 - delayInd * 8000) % delayBuffer_size;
+                reverb += delayBuffer[ind] * qExp(-delayInd*rev.attenuation);
+            }
+            convBuffer_ind = (convBuffer_ind + 1) % convBuffer_size;
+            filtBuffer[convBuffer_ind] = reverb;//filteredData[sample];
+            filteredData[sample] = reverb;
+        } else {
+            filtBuffer[convBuffer_ind] = filteredData[sample];
+            convBuffer_ind = (convBuffer_ind + 1) % convBuffer_size;
+        }
     }
-    qDebug() << numSamples;
+//    qDebug() << numSamples;
 #ifdef USE_FFTW
     fftTimer += (qreal)numSamples / 44100;
 //    qDebug() << fftTimer;
@@ -373,4 +403,10 @@ Generator::setFilter(FilterParameters &filtParam) {
     for (unsigned int ind = 0; ind < convImpulse_size; ind++) {
         convImpulse[ind] = filter->IR[ind];
     }
+}
+
+void
+Generator::setReverb(Reverb &_rev) {
+    qDebug() << "setReverb";
+    rev = _rev;
 }

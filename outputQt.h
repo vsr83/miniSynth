@@ -31,6 +31,7 @@
 #include "modulation.h"
 #include "filter.h"
 #include "ADSRenvelope.h"
+#include "reverb.h"
 
 #ifdef USE_FFTW
 #include <fftw3.h>
@@ -84,6 +85,7 @@ public slots:
     void setEnvelope  (ADSREnvelope &env);
     void setModulation(Modulation &modulation);
     void setFilter    (FilterParameters &filtParam);
+    void setReverb    (Reverb &_rev);
 private:
     QAudioFormat format;
     QByteArray m_buffer;
@@ -98,6 +100,7 @@ private:
     Modulation       mod;
     Waveform        *mod_waveform;
     Filter          *filter;
+    Reverb           rev;
 
     // convBuffer and filtBuffer are circular buffers used to store the
     // previous convBuffer_size samples before and after convolution.
@@ -106,9 +109,9 @@ private:
     // in the computation of convolution. convBuffer_ind tells the location
     // of the last added sample in the buffer.
 
-    qreal *convBuffer, *filtBuffer;
-    unsigned int convBuffer_size;
-    quint32 convBuffer_ind;
+    qreal *convBuffer, *filtBuffer, *delayBuffer;
+    unsigned int convBuffer_size, delayBuffer_size;
+    quint32 convBuffer_ind, delayBuffer_ind;
 
     // Impulse response for the current filter.
 

@@ -43,7 +43,8 @@ SOURCES += main.cpp\
     modulation.cpp \
     fftplot.cpp \
     filter.cpp \
-    filterWidget.cpp
+    filterWidget.cpp \
+    reverbWidget.cpp
 
 HEADERS  += mainWindow.h \
     ADSRenvelope.h \
@@ -61,4 +62,6 @@ HEADERS  += mainWindow.h \
     modulation.h \
     fftplot.h \
     filter.h \
-    filterWidget.h
+    filterWidget.h \
+    reverbWidget.h \
+    reverb.h
