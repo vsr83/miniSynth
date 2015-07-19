@@ -35,6 +35,8 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
     defaultEnv.peakAmpl = 1;
     defaultEnv.sustainAmpl = 0.8;
 
+    fftTimer = 0;
+
     mod_waveform = new Waveform(Waveform::MODE_SIN);
 
     convBuffer_size = 44100/4;
@@ -56,8 +58,25 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
     param.size         = 1;
     param.type         = Filter::FILTER_OFF;
     param.window_type  = Filter::WINDOW_RECT;
-
     setFilter(param);
+/*
+    param.size         = 1000;
+    setFilter(param);
+    QFile file("rtest2.txt");
+    if (!file.open(QIODevice::ReadOnly)) {
+        exit(0);
+    }
+    QTextStream in(&file);
+
+    int ind = 0;
+    while (!in.atEnd()) {
+        QString line = in.readLine();
+        qDebug() << line.toDouble();
+        convImpulse[ind++] = 20*line.toDouble();
+        if (ind == convImpulse_size) break;
+    }
+*/
+
 
 #ifdef USE_FFTW
     fftwIn  = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*convBuffer_size);
@@ -96,6 +115,7 @@ Generator::addWave(unsigned char note, unsigned char vel) {
     wav.note  = note;
     wav.vel   = vel;
     wav.state_age = 0;
+    wav.age      = 0;
     wav.env = defaultEnv;
 
     waveList.push_back(wav);
@@ -107,7 +127,7 @@ Generator::readData(char *data, qint64 len) {
     // large delay between noteOn requests and the generation of audio. Thus,
     // in order to provide more responsive interface, the packet size is
     // limited to 4096 bytes ~ 2048 samples.
-    if (len > 4096) len = 4096;
+    if (len > 2048) len = 2048;
 
     generateData(len);
     memcpy(data, m_buffer.constData(), len);
@@ -199,26 +219,28 @@ Generator::generateData(qint64 len) {
         qreal freq = 8.175 * 0.5 * qPow(2, ((qreal)wav.note)/12);
         qreal ampl = 0.5*((qreal)wav.vel)/256;
 
-        qreal age = wav.state_age;
+        qreal stateAge = wav.state_age,
+              wavAge   = wav.age;
 
         for (unsigned int sample = 0; sample < numSamples; sample++) {
-            qreal t = curtime + (qreal)sample / 44100;
-            qreal envt = age  + (qreal)sample / 44100;
+            qreal t    = curtime   + (qreal)sample / 44100;
+            qreal envt = stateAge  + (qreal)sample / 44100;
+            qreal modt = wavAge    + (qreal)sample / 44100;
 
             // Handle timed change of state in the ADSR-envelopes ATTACK->DECAY
             // and RELEASE->OFF.
             switch(wav.state) {
             case ADSREnvelope::STATE_ATTACK:
                 if (envt > attackTime) {
-                    age -= attackTime;
+                    stateAge -= attackTime;
                     wav.state = ADSREnvelope::STATE_DECAY;
                     wav.state_age -= attackTime;
-                    envt = age  + (qreal)sample / 44100;
+                    envt = stateAge  + (qreal)sample / 44100;
                 }
                 break;
             case ADSREnvelope::STATE_RELEASE:
                 if (envt > releaseTime) {
-                    age = 0;
+                    stateAge = 0;
                     wav.state = ADSREnvelope::STATE_OFF;
                 }
                 break;
@@ -232,16 +254,17 @@ Generator::generateData(qint64 len) {
                 // Compute modulation waves.
 
                 if (mod.FM_freq > 0) {
+                    qreal envVal = mod.useEnvelope ? wav.env.eval(envt, wav.state) : 1;
                     if (mod.propFreq) {
                         freqmod = mod.FM_ampl
-                                * mod_waveform->eval(2*M_PI*mod.FM_freq*freq*t);
+                                * envVal* mod_waveform->eval(2*M_PI*mod.FM_freq*freq*modt);
                     } else {
                         freqmod = mod.FM_ampl
-                                * mod_waveform->eval(2*M_PI*mod.FM_freq*t);
+                                * mod_waveform->eval(2*M_PI*mod.FM_freq*modt);
                     }
                 }
                 if (mod.AM_freq > 0) {
-                    amod = mod.AM_ampl * mod_waveform->eval(2*M_PI*mod.AM_freq*t);
+                    amod = (1 - qExp(-modt/mod.AM_time))*mod.AM_ampl * mod_waveform->eval(2*M_PI*mod.AM_freq*t);
                 }
 
                 // Evaluate the output wave for the current note and add to the
@@ -255,6 +278,7 @@ Generator::generateData(qint64 len) {
                 synthData[sample] = newVal + oldVal;
             }
         }
+        wav.age += (qreal)numSamples/44100;
         if (wav.state != ADSREnvelope::STATE_OFF) {
             wav.state_age += (qreal)numSamples/44100;
             i.setValue(wav);
@@ -278,8 +302,12 @@ Generator::generateData(qint64 len) {
         filtBuffer[convBuffer_ind] = filteredData[sample];
         convBuffer_ind = (convBuffer_ind + 1) % convBuffer_size;
     }
+    qDebug() << numSamples;
 #ifdef USE_FFTW
-    if (numSamples > 2047) {
+    fftTimer += (qreal)numSamples / 44100;
+//    qDebug() << fftTimer;
+    if (numSamples > 1023) {
+        fftTimer = 0;
         for (unsigned int convind = 0; convind < convBuffer_size; convind++) {
             fftwIn[convind][0] = convBuffer[convind];
             fftwIn[convind][1] = 0;

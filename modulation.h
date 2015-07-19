@@ -28,9 +28,9 @@ public:
 
     unsigned int mode;
     qreal FM_freq, FM_ampl;
-    qreal AM_freq, AM_ampl;
+    qreal AM_freq, AM_ampl, AM_time;
 
-    bool propFreq;
+    bool propFreq, useEnvelope;
 };
 
 #endif // MODULATION_H

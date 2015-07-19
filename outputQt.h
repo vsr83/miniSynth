@@ -44,7 +44,7 @@ class Wave {
 public:
     enum {STATE_OFF, STATE_ATTACK, STATE_DECAY, STATE_RELEASE};
     unsigned char note, vel, state;
-    qreal state_age;
+    qreal state_age, age;
     ADSREnvelope env;
 };
 
@@ -114,6 +114,8 @@ private:
 
     qreal *convImpulse;
     unsigned int convImpulse_size;
+
+    qreal fftTimer;
 
 #ifdef USE_FFTW
     fftw_complex *fftwIn, *fftwOut;

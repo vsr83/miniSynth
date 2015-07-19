@@ -156,11 +156,15 @@ FFTPlot::refreshPixmap() {
                       prevx = borderx+(sx)*(qreal)(log10( ((double)(ind-1))/periodLength) - minfl);
                 QPointF pstart(prevx, prevampl),
                         pend(x, ampl);
+           //     qDebug() << ind << prevx << prevampl << x << ampl << fftampl[ind-1] <<
+           //                 log10( ((double)ind)/periodLength) << periodLength;
             painter.drawLine(pstart, pend);
+ //               qDebug() << ind;
             }
         }
     }
    update();
+
 }
 
 void

@@ -27,12 +27,15 @@ ModulationWidget::ModulationWidget(QWidget *parent) : QWidget(parent) {
     FMfreqSlider= new QSlider(Qt::Horizontal);
     FMamplSlider= new QSlider(Qt::Horizontal);
     FMpropfreq  = new QCheckBox(tr("Proportional to Frequency"));
+    FMenvelope  = new QCheckBox(tr("Use Envelope"));
 
     AMtitle     = new QLabel(tr("AM -"));
     AMfreqLabel = new QLabel(tr("Frequency :"));
     AMamplLabel = new QLabel(tr("Amplitude :"));
+    AMtimeLabel = new QLabel(tr("Time Const:"));
     AMfreqSlider= new QSlider(Qt::Horizontal);
     AMamplSlider= new QSlider(Qt::Horizontal);
+    AMtimeSlider= new QSlider(Qt::Horizontal);
 
     waveformWidget = new WaveformWidget;
 
@@ -44,6 +47,7 @@ ModulationWidget::ModulationWidget(QWidget *parent) : QWidget(parent) {
     gridLayout->addWidget(FMfreqSlider, 1, 2, 1, 1);
     gridLayout->addWidget(FMamplSlider, 2, 2, 1, 1);
     gridLayout->addWidget(FMpropfreq,   3, 1, 1, 2);
+    gridLayout->addWidget(FMenvelope,   4, 1, 1, 2);
     FMfreqSlider->setRange(0, 1000);
     FMamplSlider->setRange(-100, 0);
     FMamplSlider->setValue(-100);
@@ -52,15 +56,21 @@ ModulationWidget::ModulationWidget(QWidget *parent) : QWidget(parent) {
 
     gridLayout->addWidget(AMfreqLabel,  1, 3, 1, 1);
     gridLayout->addWidget(AMamplLabel,  2, 3, 1, 1);
+    gridLayout->addWidget(AMtimeLabel,  3, 3, 1, 1);
     gridLayout->addWidget(AMfreqSlider, 1, 4, 1, 1);
     gridLayout->addWidget(AMamplSlider, 2, 4, 1, 1);
-    AMfreqSlider->setRange(0, 1000);
+    gridLayout->addWidget(AMtimeSlider, 3, 4, 1, 1);
+    AMfreqSlider->setRange(0, 10000);
     AMamplSlider->setRange(-100, 0);
     AMamplSlider->setValue(-100);
+    AMtimeSlider->setRange(0, 1000);
+    AMtimeSlider->setValue(200);
     AMamplSlider->setTickInterval(20);
     AMamplSlider->setTickPosition(QSlider::TicksBothSides);
 
     connect(FMpropfreq, SIGNAL(stateChanged(int)), this,
+            SLOT(parametersChanged(int)));
+    connect(FMenvelope, SIGNAL(stateChanged(int)), this,
             SLOT(parametersChanged(int)));
     connect(FMfreqSlider, SIGNAL(valueChanged(int)), this,
             SLOT(parametersChanged(int)));
@@ -69,6 +79,8 @@ ModulationWidget::ModulationWidget(QWidget *parent) : QWidget(parent) {
     connect(FMamplSlider, SIGNAL(valueChanged(int)), this,
             SLOT(parametersChanged(int)));
     connect(AMamplSlider, SIGNAL(valueChanged(int)), this,
+            SLOT(parametersChanged(int)));
+    connect(AMtimeSlider, SIGNAL(valueChanged(int)), this,
             SLOT(parametersChanged(int)));
     connect(waveformWidget, SIGNAL(modeSelected(int)), this,
             SLOT(parametersChanged(int)));
@@ -92,7 +104,9 @@ ModulationWidget::parametersChanged(int) {
 
     mod.FM_freq = 0.01 * FMfreqSlider->value();
     mod.propFreq = FMpropfreq->checkState() == Qt::Checked;
+    mod.useEnvelope = FMenvelope->checkState() == Qt::Checked;
     mod.FM_ampl = qPow(10, FM_ampl_dB/20);
+    mod.AM_time = 0.001 * AMtimeSlider->value();
 
     QString strFM;
     QTextStream(&strFM) << "FM - Freq : " << mod.FM_freq

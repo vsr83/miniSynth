@@ -41,11 +41,11 @@ private:
     QGridLayout *gridLayout;
     QSlider *FMfreqSlider, *FMamplSlider;
     QLabel  *FMfreqLabel, *FMamplLabel, *FMtitle;
-    QCheckBox *FMpropfreq;
+    QCheckBox *FMpropfreq, *FMenvelope;
 
-    QSlider *AMfreqSlider, *AMamplSlider;
-    QLabel  *AMfreqLabel, *AMamplLabel, *AMtitle;
-    QCheckBox *AMpropfreq;
+    QSlider *AMfreqSlider, *AMamplSlider, *AMtimeSlider;
+    QLabel  *AMfreqLabel, *AMamplLabel, *AMtitle, *AMtimeLabel;
+    QCheckBox *AMpropfreq, *AMenvelope;
 };
 
 #endif // MODULATIONWIDGET_H
