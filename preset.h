@@ -15,37 +15,30 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef ADSRWIDGET_H
-#define ADSRWIDGET_H
+#ifndef PRESET_H
+#define PRESET_H
 
-#include <QWidget>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QGridLayout>
-#include <QSpinBox>
-
-#include "ADSRplot.h"
 #include "ADSRenvelope.h"
+#include "filter.h"
+#include "linearSynthesis.h"
+#include "modulation.h"
+#include "reverb.h"
 
-class ADSRWidget : public QWidget {
-    Q_OBJECT
+#include <QVector>
+
+class Preset {
 public:
-    ADSRWidget(QWidget *parent = 0);
-    ~ADSRWidget();
-    void importEnvelope(ADSREnvelope &env);
-signals:
-    void envelopeChanged(ADSREnvelope &_envelope);
-private slots:
-    void valueChangedInt(int val);
-    void valueChangedDouble(double val);
-private:
-    QSpinBox       *attackSB, *decaySB, *releaseSB;
-    QDoubleSpinBox *initialSB, *peakSB, *sustainSB;
+    Preset ();
+    ~Preset();
 
-    QGridLayout *gridLayout;
-    ADSRPlot *plot;
+    unsigned int waveformMode;
+    QVector<int> timbreAmplitudes;
+    QVector<int> timbrePhases;
 
-    ADSREnvelope envelope;
+    ADSREnvelope     env;
+    FilterParameters filt;
+    Reverb           rev;
+    Modulation       mod;
 };
 
-#endif // ADSRWIDGET_H
+#endif // PRESET_H

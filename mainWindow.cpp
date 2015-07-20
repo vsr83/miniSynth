@@ -82,7 +82,7 @@ MainWindow::MainWindow(QWidget *parent)
     QHBoxLayout *hbox5 = new QHBoxLayout;
     hbox5->addWidget(filterWidget);
     filterGroup->setLayout(hbox5);
-    gridLayout->addWidget(filterGroup, 2, 2, 1, 1);
+    gridLayout->addWidget(filterGroup, 2, 2, 1, 2);
 
     reverbWidget = new ReverbWidget(44100);
     QGroupBox *reverbGroup = new QGroupBox(tr("Reverb"));
@@ -91,11 +91,20 @@ MainWindow::MainWindow(QWidget *parent)
     reverbGroup->setLayout(hbox6);
     gridLayout->addWidget(reverbGroup, 3, 2, 1, 1);
 
+    presetWidget = new PresetWidget;
+    QGroupBox *presetGroup = new QGroupBox(tr("Presets"));
+    QHBoxLayout *hbox7 = new QHBoxLayout;
+    hbox7->addWidget(presetWidget);
+    presetGroup->setLayout(hbox7);
+    gridLayout->addWidget(presetGroup, 3, 3, 1, 1);
+
+
 
 #ifdef USE_FFTW
     fftPlot = new FFTPlot(3, 0.25);//2*2048.0/44100);
-    gridLayout->addWidget(fftPlot, 0, 2, 2, 1);
-    gridLayout->setColumnMinimumWidth(2, 600);
+    gridLayout->addWidget(fftPlot, 0, 2, 2, 2);
+    gridLayout->setColumnMinimumWidth(2, 300);
+    gridLayout->setColumnMinimumWidth(3, 300);
 
     QPen thinPen;
     thinPen.setStyle(Qt::SolidLine);
@@ -155,6 +164,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(filterWidget, SIGNAL(parametersChanged(FilterParameters&)),
             m_generator, SLOT(setFilter(FilterParameters&)));
+
+    connect(presetWidget, SIGNAL(setPreset(Preset&)), this, SLOT(setPreset(Preset&)));
 #ifdef USE_FFTW
     connect(m_generator, SIGNAL(fftUpdate(fftw_complex*,uint, uint)),
             fftPlot, SLOT(fftUpdate(fftw_complex*,uint, uint)));
@@ -166,12 +177,18 @@ MainWindow::MainWindow(QWidget *parent)
             kbWidget, SLOT(note_on(unsigned char,unsigned char,unsigned char)));
     connect(midiThread, SIGNAL(note_off(unsigned char,unsigned char)),
             kbWidget, SLOT(note_off(unsigned char,unsigned char)));
-
-    connect(midiThread, SIGNAL(note_on(unsigned char,unsigned char,unsigned char)),
-            this, SLOT(note_on(unsigned char,unsigned char,unsigned char)));
-    connect(midiThread, SIGNAL(note_off(unsigned char,unsigned char)),
-            this, SLOT(note_off(unsigned char,unsigned char)));
 #endif
+}
+
+void
+MainWindow::setPreset(Preset &preset) {
+    qDebug() << "setPreset";
+    modulationWidget->importModulation(preset.mod);
+    reverbWidget->importReverb(preset.rev);
+    waveformWidget->setMode(preset.waveformMode);
+    timbreWidget->setValues(preset.timbreAmplitudes, preset.timbrePhases);
+    envelopeWidget->importEnvelope(preset.env);
+    filterWidget->importFilter(preset.filt);
 }
 
 MainWindow::~MainWindow()

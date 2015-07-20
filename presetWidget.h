@@ -15,39 +15,34 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MODULATIONWIDGET_H
-#define MODULATIONWIDGET_H
+#ifndef PRESETWIDGET_H
+#define PRESETWIDGET_H
 
 #include <QWidget>
-#include <QSlider>
-#include <QCheckBox>
-#include <QLabel>
 #include <QGridLayout>
-#include "waveformWidget.h"
-#include "modulation.h"
+#include <QPushButton>
+#include <QButtonGroup>
+#include <QVector>
+#include "preset.h"
 
-class ModulationWidget : public QWidget {
+class PresetWidget : public QWidget {
     Q_OBJECT
 public:
-    ModulationWidget(QWidget *parent = 0);
-    ~ModulationWidget();
-
-    void importModulation(Modulation &modulation);
-signals:
-    void setModulation(Modulation &modulation);
+    PresetWidget(QWidget *parent = 0);
+    ~PresetWidget();
 private slots:
-    void parametersChanged(int);
+    void presetClicked(int button);
+signals:
+    void setPreset(Preset &preset);
 private:
-    WaveformWidget *waveformWidget;
-
     QGridLayout *gridLayout;
-    QSlider *FMfreqSlider, *FMamplSlider;
-    QLabel  *FMfreqLabel, *FMamplLabel, *FMtitle;
-    QCheckBox *FMpropfreq, *FMenvelope;
+    Preset PresetSinwave, PresetElOrgan,  PresetChOrgan,
+           PresetBrass,   PresetSynthPad, PresetSynthLead;
+    QPushButton *buttonSinwave, *buttonElOrgan, *buttonChOrgan,
+                *buttonBrass, *buttonSynthPad, *buttonSynthLead;
+    QButtonGroup *buttonGroup;
 
-    QSlider *AMfreqSlider, *AMamplSlider, *AMtimeSlider;
-    QLabel  *AMfreqLabel, *AMamplLabel, *AMtitle, *AMtimeLabel;
-    QCheckBox *AMpropfreq, *AMenvelope;
+    QVector<Preset> presets;
 };
 
-#endif // MODULATIONWIDGET_H
+#endif // PRESETWIDGET_H

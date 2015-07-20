@@ -17,6 +17,7 @@
 
 #include "modulationWidget.h"
 #include <QDebug>
+#include <math.h>
 
 ModulationWidget::ModulationWidget(QWidget *parent) : QWidget(parent) {
     gridLayout = new QGridLayout;
@@ -86,6 +87,24 @@ ModulationWidget::ModulationWidget(QWidget *parent) : QWidget(parent) {
             SLOT(parametersChanged(int)));
 
     setLayout(gridLayout);
+    parametersChanged(0);
+}
+
+void
+ModulationWidget::importModulation(Modulation &mod) {
+    //AM_ampl_dB = AMamplSlider->value();
+    //AM_ampl = qPow(10, AM_ampl_dB / 20);
+    //
+    // AM_ampl_dB = 20 * log10(AM_ampl)
+
+    AMamplSlider->setValue((int)(20*log10(mod.AM_ampl)));
+    FMamplSlider->setValue((int)(20*log10(mod.FM_ampl)));
+    AMfreqSlider->setValue((int)(100*mod.AM_freq));
+    FMfreqSlider->setValue((int)(100*mod.FM_freq));
+
+    FMpropfreq->setChecked(mod.propFreq);
+    FMenvelope->setChecked(mod.useEnvelope);
+    waveformWidget->setMode(mod.mode);
 }
 
 ModulationWidget::~ModulationWidget() {
@@ -109,12 +128,12 @@ ModulationWidget::parametersChanged(int) {
     mod.AM_time = 0.001 * AMtimeSlider->value();
 
     QString strFM;
-    QTextStream(&strFM) << "FM - Freq : " << mod.FM_freq
+    QTextStream(&strFM) << "<b>FM</b> - Freq : " << mod.FM_freq
                         << " Ampl : " << FM_ampl_dB << " dB";
     FMtitle->setText(strFM);
 
     QString strAM;
-    QTextStream(&strAM) << "AM - Freq : " << mod.AM_freq
+    QTextStream(&strAM) << "<b>AM</b> - Freq : " << mod.AM_freq
                         << " Ampl : " << AM_ampl_dB << " dB";
     AMtitle->setText(strAM);
 

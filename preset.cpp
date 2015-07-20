@@ -15,37 +15,33 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef ADSRWIDGET_H
-#define ADSRWIDGET_H
+#include "preset.h"
 
-#include <QWidget>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QGridLayout>
-#include <QSpinBox>
+Preset::Preset() : timbreAmplitudes(8, 0), timbrePhases(8, 0) {
+    waveformMode = Waveform::MODE_SIN;
+    env.attackTime = 100;
+    env.decayTime = 400;
+    env.releaseTime = 100;
 
-#include "ADSRplot.h"
-#include "ADSRenvelope.h"
+    env.initialAmpl = 0;
+    env.peakAmpl = 1;
+    env.sustainAmpl = 0.8;
 
-class ADSRWidget : public QWidget {
-    Q_OBJECT
-public:
-    ADSRWidget(QWidget *parent = 0);
-    ~ADSRWidget();
-    void importEnvelope(ADSREnvelope &env);
-signals:
-    void envelopeChanged(ADSREnvelope &_envelope);
-private slots:
-    void valueChangedInt(int val);
-    void valueChangedDouble(double val);
-private:
-    QSpinBox       *attackSB, *decaySB, *releaseSB;
-    QDoubleSpinBox *initialSB, *peakSB, *sustainSB;
+    filt.freq1 = filt.freq2 = 4000;
+    filt.samplingRate = 44100;
+    filt.size         = 1;
+    filt.type         = Filter::FILTER_OFF;
+    filt.window_type  = Filter::WINDOW_RECT;
+    filt.fftTimer     = 100;
 
-    QGridLayout *gridLayout;
-    ADSRPlot *plot;
+    rev.active = 0;
+    rev.attenuation = 1.0;
+    rev.delay = 8000;
+    rev.samplingRate = 44100;
 
-    ADSREnvelope envelope;
-};
+    timbreAmplitudes[0] = 100;
+    timbrePhases[0] = 0;
+}
 
-#endif // ADSRWIDGET_H
+Preset::~Preset() {
+}

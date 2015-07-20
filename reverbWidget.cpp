@@ -85,6 +85,14 @@ ReverbWidget::updateReverb(bool value) {
 }
 
 void
+ReverbWidget::importReverb(Reverb &rev) {
+    delayDial->setValue(rev.delay);
+    attnDial->setValue((int)(rev.attenuation*100));
+    activeBox->setChecked(rev.active);
+    emit setReverb(rev);
+}
+
+void
 ReverbWidget::updateReverb(int value) {
     Reverb rev;
     Q_UNUSED(value);

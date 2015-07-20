@@ -44,7 +44,9 @@ SOURCES += main.cpp\
     fftplot.cpp \
     filter.cpp \
     filterWidget.cpp \
-    reverbWidget.cpp
+    reverbWidget.cpp \
+    presetWidget.cpp \
+    preset.cpp
 
 HEADERS  += mainWindow.h \
     ADSRenvelope.h \
@@ -64,4 +66,6 @@ HEADERS  += mainWindow.h \
     filter.h \
     filterWidget.h \
     reverbWidget.h \
-    reverb.h
+    reverb.h \
+    presetWidget.h \
+    preset.h

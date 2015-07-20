@@ -78,6 +78,24 @@ WaveformWidget::toggleSaw2(bool st) {
     }
 }
 
+void
+WaveformWidget::setMode(int mode) {
+    switch(mode) {
+    case Waveform::MODE_SIN:
+        sinButton->toggle();
+        break;
+    case Waveform::MODE_SAW:
+        sawButton->toggle();
+        break;
+    case Waveform::MODE_SAW2:
+        saw2Button->toggle();
+        break;
+    case Waveform::MODE_SQU:
+        squButton->toggle();
+        break;
+    }
+}
+
 
 WaveformWidget::~WaveformWidget() {
 }

@@ -18,13 +18,14 @@
 #include "filterWidget.h"
 #include <QDebug>
 #include <qmath.h>
+#include <math.h>
 
 FilterWidget::FilterWidget(QWidget *parent) : QWidget(parent) {
     filterParameters.samplingRate= 44100;
-    filterParameters.freq1       = 0;
+    filterParameters.freq1       = 3950.7;
     filterParameters.freq2       = 4000;
     filterParameters.size        = 100;
-    filterParameters.fftTimer    = 150;
+    filterParameters.fftTimer    = 100;
     filterParameters.type        = Filter::FILTER_OFF;
     filterParameters.window_type = Filter::WINDOW_RECT;
 
@@ -69,9 +70,9 @@ FilterWidget::FilterWidget(QWidget *parent) : QWidget(parent) {
     connect(filterGroup, SIGNAL(buttonReleased(int)), this, SLOT(filterSelect(int)));
     connect(windowGroup, SIGNAL(buttonReleased(int)), this, SLOT(windowSelect(int)));
 
-    typeLabel   = new QLabel(tr("Type"));
-    windowLabel = new QLabel(tr("Window"));
-    paramLabel  = new QLabel(tr("FILTER "));
+    typeLabel   = new QLabel(tr("<b>Type</b>"));
+    windowLabel = new QLabel(tr("<b>Window</b>"));
+    paramLabel  = new QLabel(tr("<b>Parameters</b> "));
     paramLabel2  = new QLabel(tr(" "));
 
     freqLabel1 = new QLabel(tr("Cutoff 1 :"));
@@ -83,7 +84,7 @@ FilterWidget::FilterWidget(QWidget *parent) : QWidget(parent) {
     cutoffLabel2 = new QLabel("");
     freqSlider1->setRange(1, 127);
     freqSlider2->setRange(1, 127);
-    freqSlider1->setValue(33);
+    freqSlider1->setValue(119);
     freqSlider2->setValue(120);
 
     connect(freqSlider1, SIGNAL(valueChanged(int)), this, SLOT(setFreq1(int)));
@@ -221,6 +222,52 @@ FilterWidget::setFFTTimer(int len) {
 }
 
 FilterWidget::~FilterWidget() {
+}
+
+void
+FilterWidget::importFilter(FilterParameters &param) {
+    filterParameters = param;
+    //f = 8.175 * 0.5 * qPow(2, ((qreal)note)/12)
+    // note = 12*log2(f/(8.175*0.5))
+    int note1 = (int)12*log2(param.freq1/(8.175*0.5)),
+        note2 = (int)12*log2(param.freq2/(8.175*0.5));
+
+    freqSlider1->setValue(note1);
+    freqSlider2->setValue(note2);
+    switch (param.type) {
+    case Filter::FILTER_OFF:
+        offButton->setChecked(true);
+        break;
+    case Filter::FILTER_LOWPASS:
+        LPButton->setChecked(true);
+        break;
+    case Filter::FILTER_HIGHPASS:
+        HPButton->setChecked(true);
+        break;
+    case Filter::FILTER_BANDPASS:
+        BPButton->setChecked(true);
+        break;
+    case Filter::FILTER_BANDSTOP:
+        BSButton->setChecked(true);
+        break;
+    }
+    switch (param.window_type) {
+    case Filter::WINDOW_RECT:
+        RectButton->setChecked(true);
+        break;
+    case Filter::WINDOW_HANNING:
+        HanningButton->setChecked(true);
+        break;
+    case Filter::WINDOW_HAMMING:
+        HammingButton->setChecked(true);
+        break;
+    case Filter::WINDOW_BLACKMAN:
+        BlackmanButton->setChecked(true);
+        break;
+    }
+
+    filterGroup->buttonClicked(param.type);
+    windowGroup->buttonClicked(param.window_type);
 }
 
 void

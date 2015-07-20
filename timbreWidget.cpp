@@ -68,9 +68,15 @@ TimbreWidget::reset() {
 
 void
 TimbreWidget::updateValues() {
+    QVector<int> amp, pha;
+
+    amp = amplitudes;
+    pha = phases;
+
     for (int harm = 0; harm < numHarmonics; harm++) {
-         sliders[harm]->setValue(amplitudes[harm]);
-         dials[harm]->setValue(phases[harm]);
+        qDebug() << harm << amplitudes[harm];
+         sliders[harm]->setValue(amp[harm]);
+         dials[harm]->setValue(pha[harm]);
     }
 }
 
@@ -90,6 +96,7 @@ TimbreWidget::valueChanged(int tmp) {
 void
 TimbreWidget::setValues(QVector<int> &amplitudesIn, QVector<int> &phasesIn) {
     amplitudes = amplitudesIn;
+
     phases = phasesIn;
     updateValues();
 }

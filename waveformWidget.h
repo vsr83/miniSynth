@@ -31,7 +31,8 @@ public:
     WaveformWidget(QWidget *parent = 0);
     ~WaveformWidget();
 
-    int getMode();
+    void setMode(int mode);
+    int  getMode();
 public slots:
 private slots:
     void toggleSin (bool st);

@@ -77,7 +77,7 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
     param.size         = 1;
     param.type         = Filter::FILTER_OFF;
     param.window_type  = Filter::WINDOW_RECT;
-    param.fftTimer     = 150;
+    param.fftTimer     = 100;
     setFilter(param);
 /*
     param.size         = 1000;
@@ -139,7 +139,7 @@ Generator::readData(char *data, qint64 len) {
     // large delay between noteOn requests and the generation of audio. Thus,
     // in order to provide more responsive interface, the packet size is
     // limited to 4096 bytes ~ 2048 samples.
-    if (len > 2048) len = 2048;
+    if (len > 1024) len = 1024;
 
     generateData(len);
     memcpy(data, m_buffer.constData(), len);
@@ -284,7 +284,7 @@ Generator::generateData(qint64 len) {
 
                 qreal envVal = wav.env.eval(envt, wav.state);
                 qreal newVal = envVal * (ampl + amod)
-                             * linSyn->evalTimbre(2*M_PI*(freq+freqmod)*t);
+                             * 0.5 * linSyn->evalTimbre(2*M_PI*(freq+freqmod)*(modt+100));
                 qreal oldVal = synthData[sample];
 
                 synthData[sample] = newVal + oldVal;
@@ -338,7 +338,7 @@ Generator::generateData(qint64 len) {
 //    qDebug() << fftTimer;
    // if (numSamples > 1023) {
     if (fftTimer > 0.001*filter->fftTimer) {
-        qDebug () << filter->fftTimer;
+      //  qDebug () << filter->fftTimer;
         fftTimer = 0;
         for (unsigned int convind = 0; convind < convBuffer_size; convind++) {
             fftwIn[convind][0] = convBuffer[convind];

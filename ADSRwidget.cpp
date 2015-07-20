@@ -117,6 +117,23 @@ ADSRWidget::valueChangedInt(int val) {
 }
 
 void
+ADSRWidget::importEnvelope(ADSREnvelope &env) {
+    envelope.attackTime  = env.attackTime;
+    envelope.decayTime   = env.decayTime;
+    envelope.initialAmpl = env.initialAmpl;
+    envelope.peakAmpl    = env.peakAmpl;
+    envelope.releaseTime = env.releaseTime;
+    envelope.sustainAmpl = env.sustainAmpl;
+
+    attackSB->setValue(envelope.attackTime);
+    decaySB->setValue(envelope.decayTime);
+    initialSB->setValue(env.initialAmpl);
+    peakSB->setValue(env.peakAmpl);
+    releaseSB->setValue(env.releaseTime);
+    sustainSB->setValue(env.sustainAmpl);
+}
+
+void
 ADSRWidget::valueChangedDouble(double val) {
     valueChangedInt(0);
     Q_UNUSED(val);

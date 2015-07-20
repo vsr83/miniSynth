@@ -33,7 +33,8 @@ public:
     ReverbWidget(unsigned int _samplingRate, QWidget *parent = 0);
     ~ReverbWidget();
 
-    QSlider *delaySlider, *attnSlider;
+    void importReverb(Reverb &rev);
+
     QLabel  *delayLabel, *attnLabel;
     QLabel  *delayValueLabel, *attnValueLabel;
 

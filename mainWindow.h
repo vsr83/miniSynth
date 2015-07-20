@@ -34,6 +34,7 @@
 #include "fftplot.h"
 #include "filterWidget.h"
 #include "reverbWidget.h"
+#include "presetWidget.h"
 
 #ifdef MIDI_ALSA
 #include "midiThread.h"
@@ -46,6 +47,9 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+private slots:
+    void setPreset(Preset &preset);
 private:
     unsigned int bufferSize;
 
@@ -60,6 +64,7 @@ private:
 #endif
     FilterWidget     *filterWidget;
     ReverbWidget     *reverbWidget;
+    PresetWidget     *presetWidget;
 
     Generator       *m_generator;
     QAudioDeviceInfo m_device;

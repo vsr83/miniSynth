@@ -32,6 +32,7 @@ class FilterWidget : public QWidget {
 public:
     FilterWidget(QWidget *parent = 0);
     ~FilterWidget();
+    void importFilter(FilterParameters &param);
 signals:
     void parametersChanged(FilterParameters &param);
 private slots:
