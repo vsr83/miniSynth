@@ -37,19 +37,20 @@ signals:
 private slots:
     void windowSelect(int button);
     void filterSelect(int button);
-    void setFreq1(int freq);
-    void setFreq2(int freq);
-    void setSize (int size);
+    void setFreq1    (int freq);
+    void setFreq2    (int freq);
+    void setSize     (int size);
+    void setFFTTimer (int len);
 private:
     void updateParameters();
     QGridLayout *gridLayout;
     QLabel *typeLabel, *windowLabel, *freqLabel;
 
     QLabel  *freqLabel1,  *freqLabel2, *paramLabel, *paramLabel2, *sizeLabel;
-    QLabel *cutoffLabel1, *cutoffLabel2;
+    QLabel *cutoffLabel1, *cutoffLabel2, *fftTimeLabel;
     QSlider *freqSlider1, *freqSlider2;
 
-    QSpinBox     *sizeSpinBox;
+    QSpinBox     *sizeSpinBox, *fftTimeSpinBox;
     QButtonGroup *filterGroup, *windowGroup;
     QRadioButton *LPButton, *HPButton, *BPButton, *BSButton, *offButton;
     QRadioButton *RectButton, *HanningButton, *HammingButton, *BlackmanButton, *KaiserButton;

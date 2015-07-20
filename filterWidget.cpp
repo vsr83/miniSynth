@@ -24,6 +24,7 @@ FilterWidget::FilterWidget(QWidget *parent) : QWidget(parent) {
     filterParameters.freq1       = 0;
     filterParameters.freq2       = 4000;
     filterParameters.size        = 100;
+    filterParameters.fftTimer    = 150;
     filterParameters.type        = Filter::FILTER_OFF;
     filterParameters.window_type = Filter::WINDOW_RECT;
 
@@ -75,6 +76,7 @@ FilterWidget::FilterWidget(QWidget *parent) : QWidget(parent) {
 
     freqLabel1 = new QLabel(tr("Cutoff 1 :"));
     freqLabel2 = new QLabel(tr("Cutoff 2 :"));
+    fftTimeLabel = new QLabel(tr("FFT Timer :"));
     freqSlider1 = new QSlider(Qt::Horizontal);
     freqSlider2 = new QSlider(Qt::Horizontal);
     cutoffLabel1 = new QLabel("");
@@ -92,7 +94,13 @@ FilterWidget::FilterWidget(QWidget *parent) : QWidget(parent) {
     sizeSpinBox->setValue(filterParameters.size);
     sizeLabel = new QLabel(tr("Filter Size :"));
 
+    fftTimeSpinBox = new QSpinBox;
+    fftTimeSpinBox->setRange(25, 1000);
+    fftTimeSpinBox->setValue(filterParameters.fftTimer);
+    fftTimeSpinBox->setSuffix(tr(" ms"));
+
     connect(sizeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(setSize(int)));
+    connect(fftTimeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(setFFTTimer(int)));
 
     gridLayout = new QGridLayout();
     gridLayout->addWidget(offButton, 1, 0, 1, 1);
@@ -115,6 +123,8 @@ FilterWidget::FilterWidget(QWidget *parent) : QWidget(parent) {
     gridLayout->addWidget(cutoffLabel2, 3, 6, 1, 1);
     gridLayout->addWidget(sizeLabel,   4, 4, 1, 1);
     gridLayout->addWidget(sizeSpinBox, 4, 5, 1, 1);
+    gridLayout->addWidget(fftTimeLabel,   5, 4, 1, 1);
+    gridLayout->addWidget(fftTimeSpinBox, 5, 5, 1, 1);
     gridLayout->setColumnMinimumWidth(6, 80);
 
     gridLayout->addWidget(typeLabel,   0, 0, 1, 1);
@@ -199,6 +209,13 @@ FilterWidget::windowSelect(int button) {
         filterParameters.window_type = 5;
         break;
     }
+    emit parametersChanged(filterParameters);
+    updateParameters();
+}
+
+void
+FilterWidget::setFFTTimer(int len) {
+    filterParameters.fftTimer = len;
     emit parametersChanged(filterParameters);
     updateParameters();
 }

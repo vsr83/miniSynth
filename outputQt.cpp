@@ -64,12 +64,20 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
     filter      = 0;
     convImpulse = 0;
 
+#ifdef USE_FFTW
+    fftwIn  = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*convBuffer_size);
+    fftwOut = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*convBuffer_size);
+    fftwPlan= fftw_plan_dft_1d(convBuffer_size, fftwIn, fftwOut,
+                                FFTW_FORWARD, FFTW_ESTIMATE);
+#endif
+
     FilterParameters param;
     param.freq1 = param.freq2 = 0;
     param.samplingRate = 44100;
     param.size         = 1;
     param.type         = Filter::FILTER_OFF;
     param.window_type  = Filter::WINDOW_RECT;
+    param.fftTimer     = 150;
     setFilter(param);
 /*
     param.size         = 1000;
@@ -88,14 +96,6 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
         if (ind == convImpulse_size) break;
     }
 */
-
-
-#ifdef USE_FFTW
-    fftwIn  = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*convBuffer_size);
-    fftwOut = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*convBuffer_size);
-    fftwPlan= fftw_plan_dft_1d(convBuffer_size, fftwIn, fftwOut,
-                                FFTW_FORWARD, FFTW_ESTIMATE);
-#endif
 }
 
 Generator::~Generator() {
@@ -139,7 +139,7 @@ Generator::readData(char *data, qint64 len) {
     // large delay between noteOn requests and the generation of audio. Thus,
     // in order to provide more responsive interface, the packet size is
     // limited to 4096 bytes ~ 2048 samples.
-    if (len > 4096) len = 4096;
+    if (len > 2048) len = 2048;
 
     generateData(len);
     memcpy(data, m_buffer.constData(), len);
@@ -336,7 +336,9 @@ Generator::generateData(qint64 len) {
 #ifdef USE_FFTW
     fftTimer += (qreal)numSamples / 44100;
 //    qDebug() << fftTimer;
-    if (numSamples > 1023) {
+   // if (numSamples > 1023) {
+    if (fftTimer > 0.001*filter->fftTimer) {
+        qDebug () << filter->fftTimer;
         fftTimer = 0;
         for (unsigned int convind = 0; convind < convBuffer_size; convind++) {
             fftwIn[convind][0] = convBuffer[convind];
@@ -354,12 +356,6 @@ Generator::generateData(qint64 len) {
             fftwIn[convind][0] = 0;
             fftwIn[convind][1] = 0;
         }
-        for (unsigned int convind = 0; convind < convImpulse_size; convind++) {
-            fftwIn[convind][0] = 2*(convBuffer_size/(M_PI*M_PI))*convImpulse[convind];
-            fftwIn[convind][1] = 0;
-        }
-        fftw_execute(fftwPlan);
-        emit fftUpdate(fftwOut, convBuffer_size, 2);
     }
 #endif
 
@@ -398,11 +394,21 @@ Generator::setFilter(FilterParameters &filtParam) {
 
     filter = new Filter(filtParam.type, filtParam.window_type, filtParam.size,
                         44100, filtParam.freq1, filtParam.freq2);
+    filter->fftTimer = filtParam.fftTimer;
     convImpulse_size= filter->size;
     convImpulse     = new qreal[convImpulse_size];
     for (unsigned int ind = 0; ind < convImpulse_size; ind++) {
         convImpulse[ind] = filter->IR[ind];
     }
+#ifdef USE_FFTW
+    for (unsigned int convind = 0; convind < convImpulse_size; convind++) {
+        fftwIn[convind][0] = 2*(convBuffer_size/(M_PI*M_PI))*convImpulse[convind];
+        fftwIn[convind][1] = 0;
+    }
+    fftw_execute(fftwPlan);
+    emit fftUpdate(fftwOut, convBuffer_size, 2);
+#endif
+    qDebug() << filtParam.fftTimer;
 }
 
 void
