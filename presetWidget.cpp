@@ -67,10 +67,10 @@ PresetWidget::PresetWidget(QWidget *parent) : QWidget(parent) {
     PresetElOrgan.mod.AM_ampl = 0.1;
     PresetElOrgan.mod.AM_freq = 10;
 
-    PresetChOrgan.timbreAmplitudes[0] = 70;
-    PresetChOrgan.timbreAmplitudes[1] = 24;
-    PresetChOrgan.timbreAmplitudes[3] = 24;
-    PresetChOrgan.timbreAmplitudes[7] = 70;
+    PresetChOrgan.timbreAmplitudes[0] = 50;
+    PresetChOrgan.timbreAmplitudes[1] = 15;
+    PresetChOrgan.timbreAmplitudes[3] = 15;
+    PresetChOrgan.timbreAmplitudes[7] = 50;
     PresetChOrgan.rev.active = true;
     PresetChOrgan.rev.attenuation = 1.2;
     PresetChOrgan.env.attackTime = 50;

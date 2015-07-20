@@ -189,6 +189,7 @@ MainWindow::setPreset(Preset &preset) {
     timbreWidget->setValues(preset.timbreAmplitudes, preset.timbrePhases);
     envelopeWidget->importEnvelope(preset.env);
     filterWidget->importFilter(preset.filt);
+    m_generator->setFilter(preset.filt);
 }
 
 MainWindow::~MainWindow()
