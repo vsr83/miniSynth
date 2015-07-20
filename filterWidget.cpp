@@ -268,6 +268,7 @@ FilterWidget::importFilter(FilterParameters &param) {
 
     filterGroup->buttonClicked(param.type);
     windowGroup->buttonClicked(param.window_type);
+    updateParameters();
 }
 
 void
