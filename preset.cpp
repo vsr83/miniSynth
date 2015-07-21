@@ -29,7 +29,7 @@ Preset::Preset() : timbreAmplitudes(8, 0), timbrePhases(8, 0) {
 
     filt.freq1 = filt.freq2 = 4000;
     filt.samplingRate = 44100;
-    filt.size         = 1;
+    filt.size         = 100;
     filt.type         = Filter::FILTER_OFF;
     filt.window_type  = Filter::WINDOW_RECT;
     filt.fftTimer     = 100;
