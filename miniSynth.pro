@@ -9,7 +9,7 @@ QT       += core gui multimedia
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 #CONFIG += midi_alsa
-CONFIG += use_fftw
+#CONFIG += use_fftw
 QMAKE_CXXFLAGS = -O3
 
 use_fftw {
@@ -46,7 +46,8 @@ SOURCES += main.cpp\
     filterWidget.cpp \
     reverbWidget.cpp \
     presetWidget.cpp \
-    preset.cpp
+    preset.cpp \
+    fft.cpp
 
 HEADERS  += mainWindow.h \
     ADSRenvelope.h \
@@ -68,4 +69,5 @@ HEADERS  += mainWindow.h \
     reverbWidget.h \
     reverb.h \
     presetWidget.h \
-    preset.h
+    preset.h \
+    fft.h

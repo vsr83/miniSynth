@@ -35,6 +35,8 @@
 
 #ifdef USE_FFTW
 #include <fftw3.h>
+#else
+#include "fft.h"
 #endif
 
 // The state of each active note is described with an Wave object. Wave
@@ -74,6 +76,8 @@ public:
 signals:
 #ifdef USE_FFTW
     void fftUpdate(fftw_complex *out, unsigned int size, unsigned int ind_dataset);
+#else
+    void fftUpdate(std::complex<qreal> *out, unsigned int size, unsigned int ind_dataset);
 #endif
 public slots:
     void noteOn   (unsigned char chan, unsigned char note, unsigned char vel);
@@ -123,6 +127,9 @@ private:
 #ifdef USE_FFTW
     fftw_complex *fftwIn, *fftwOut;
     fftw_plan     fftwPlan;
+#else
+    std::complex<qreal> *fftData;
+    unsigned int fftLength;
 #endif
 };
 

@@ -17,8 +17,6 @@
 
 #include "fftplot.h"
 
-#ifdef USE_FFTW
-
 #include <QStylePainter>
 #include <QDebug>
 #include <QPen>
@@ -66,6 +64,8 @@ void
 FFTPlot::refreshPixmap() {
     pixmap = QPixmap(size());
     pixmap.fill();
+
+    qDebug() << "refresh";
 
     int borderx = 40, bordery = 20, padding = 10, ticksize = 5;
 
@@ -148,21 +148,37 @@ FFTPlot::refreshPixmap() {
 
         if (fftSizes[ind_plot] != 0 && fftampl != 0) {
             for (unsigned int ind = 1; ind < fftSizes[ind_plot]/2; ind++) {
-                qreal prevampl = wh-padding-bordery
-                               - (sy*20*(qreal)(log10((double)fftampl[ind-1]) - minampll)),
-                      ampl     = wh-padding-bordery
-                               - (sy*20*(qreal)(log10((double)fftampl[ind]  ) - minampll));
-                qreal x     = borderx+(sx)*(qreal)(log10( ((double)ind)/periodLength) - minfl),
-                      prevx = borderx+(sx)*(qreal)(log10( ((double)(ind-1))/periodLength) - minfl);
+                qreal prevampl, ampl;
+
+                prevampl = wh-padding-bordery
+                         - (sy*20*(qreal)(log10((double)fftampl[ind-1]) - minampll));
+                ampl     = wh-padding-bordery
+                         - (sy*20*(qreal)(log10((double)fftampl[ind]  ) - minampll));
+
+                qreal x     = padding+borderx+(sx)*(qreal)(log10( ((double)ind)/periodLength) - minfl),
+                      prevx = padding+borderx+(sx)*(qreal)(log10( ((double)(ind-1))/periodLength) - minfl);
                 QPointF pstart(prevx, prevampl),
                         pend(x, ampl);
-           //     qDebug() << ind << prevx << prevampl << x << ampl << fftampl[ind-1] <<
-           //                 log10( ((double)ind)/periodLength) << periodLength;
-            painter.drawLine(pstart, pend);
- //               qDebug() << ind;
+
+                // Prevent infinitely long line to -infinity
+                if (ind == 1) {
+                    prevx = padding+borderx;
+                }
+            if (x > padding && prevx > padding)
+                painter.drawLine(pstart, pend);
+//            else {
+//               qDebug() << ind_plot << ind << prevx << prevampl << x << ampl
+//                         << fftampl[ind - 1] << fftampl[ind];
+//            }
+//            if (ind_plot == 2 && ind == 1) {
+//                    pstart.setX(pstart.x() - padding);
+//                    pend.setX(pend.x() - padding);
+//                    painter.drawLine(pstart, pend);
+//                }
             }
         }
     }
+
    update();
 
 }
@@ -180,6 +196,7 @@ FFTPlot::resizeEvent(QResizeEvent *event) {
     Q_UNUSED(event);
 }
 
+#ifdef USE_FFTW
 void
 FFTPlot::fftUpdate(fftw_complex *out, unsigned int size, unsigned int ind_dataset) {
     Q_ASSERT(ind_dataset < numPlots);
@@ -196,8 +213,36 @@ FFTPlot::fftUpdate(fftw_complex *out, unsigned int size, unsigned int ind_datase
         qreal re = out[ind][0], im = out[ind][1];
 
         fftAmpl[ind] = 0.5*qSqrt(re*re + im*im)/fftSizes[ind_dataset];
+        if (fftAmpl[ind] == 0) {
+            fftAmpl[ind] = minampl;
+        }
     }
     refreshPixmap();
 }
+#else
+void
+FFTPlot::fftUpdate(std::complex<qreal> *out, unsigned int size, unsigned int ind_dataset) {
+    Q_ASSERT(ind_dataset < numPlots);
 
+//    qDebug() << ind_dataset << size;
+
+    if (fftSizes[ind_dataset] != size) {
+        if (fftSizes[ind_dataset] > 0) {
+            delete [] fftAmpls[ind_dataset];
+        }
+        fftSizes[ind_dataset] = size;
+        fftAmpls[ind_dataset] = new qreal[size];
+    }
+    qreal *fftAmpl = fftAmpls[ind_dataset];
+    for (unsigned int ind=0; ind < fftSizes[ind_dataset]; ind++) {
+        qreal re = out[ind].real(), im = out[ind].imag();
+
+        fftAmpl[ind] = 0.5*qSqrt(re*re + im*im)/fftSizes[ind_dataset];
+        if (fftAmpl[ind] == 0) {
+            fftAmpl[ind] = minampl;
+        }
+    }
+    refreshPixmap();
+}
 #endif
+

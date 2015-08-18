@@ -59,9 +59,8 @@ private:
     ADSRWidget       *envelopeWidget;
     ModulationWidget *modulationWidget;
     KBWidget         *kbWidget;
-#ifdef USE_FFTW
     FFTPlot          *fftPlot;
-#endif
+
     FilterWidget     *filterWidget;
     ReverbWidget     *reverbWidget;
     PresetWidget     *presetWidget;

@@ -19,8 +19,11 @@
 #define FFTPLOT_H
 
 #ifdef USE_FFTW
-
 #include <fftw3.h>
+#else
+#include "fft.h"
+#endif
+
 #include <QWidget>
 #include <QPixmap>
 #include <QVector>
@@ -34,7 +37,11 @@ public:
     void setPen(unsigned int ind_plot, QPen pen);
 
 public slots:
+#ifdef USE_FFTW
     void fftUpdate     (fftw_complex *out, unsigned int size, unsigned int ind_dataset);
+#else
+    void fftUpdate     (std::complex<qreal> *out, unsigned int size, unsigned int ind_dataset);
+#endif
 protected:
     void paintEvent (QPaintEvent  *event);
     void resizeEvent(QResizeEvent *event);
@@ -54,7 +61,5 @@ private:
     qreal minampl, maxampl;
 };
 
-
-#endif
 
 #endif // FFTPLOT_H

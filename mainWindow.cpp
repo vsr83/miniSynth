@@ -99,9 +99,7 @@ MainWindow::MainWindow(QWidget *parent)
     gridLayout->addWidget(presetGroup, 3, 3, 1, 1);
 
 
-
-#ifdef USE_FFTW
-    fftPlot = new FFTPlot(3, 0.25);//2*2048.0/44100);
+    fftPlot = new FFTPlot(3, 8192./44100.);//2*2048.0/44100);
     gridLayout->addWidget(fftPlot, 0, 2, 2, 2);
     gridLayout->setColumnMinimumWidth(2, 300);
     gridLayout->setColumnMinimumWidth(3, 300);
@@ -117,9 +115,6 @@ MainWindow::MainWindow(QWidget *parent)
     filterPen.setWidth(1);
     filterPen.setColor(QColor(180, 0, 0));
     fftPlot->setPen(2, filterPen);
-#else
-
-#endif
 
     bufferSize = 8192*2;
 
@@ -169,6 +164,9 @@ MainWindow::MainWindow(QWidget *parent)
 #ifdef USE_FFTW
     connect(m_generator, SIGNAL(fftUpdate(fftw_complex*,uint, uint)),
             fftPlot, SLOT(fftUpdate(fftw_complex*,uint, uint)));
+#else
+    connect(m_generator, SIGNAL(fftUpdate(std::complex<qreal>*,uint, uint)),
+            fftPlot, SLOT(fftUpdate(std::complex<qreal>*,uint, uint)));
 #endif
 #ifdef MIDI_ALSA
     midiThread = new MidiThread(tr("hw:1,0,0"));

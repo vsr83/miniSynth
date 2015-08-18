@@ -45,7 +45,7 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
     mod_waveform = new Waveform(Waveform::MODE_SIN);
 
     delayBuffer_size = 44100*2;
-    convBuffer_size = 44100/4;
+    convBuffer_size = 8192;
     convBuffer      = new qreal[convBuffer_size];
     filtBuffer      = new qreal[convBuffer_size];
     delayBuffer     = new qreal[delayBuffer_size];
@@ -69,12 +69,15 @@ Generator::Generator(const QAudioFormat &_format, QObject *parent) : QIODevice(p
     fftwOut = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*convBuffer_size);
     fftwPlan= fftw_plan_dft_1d(convBuffer_size, fftwIn, fftwOut,
                                 FFTW_FORWARD, FFTW_ESTIMATE);
+#else
+    fftLength = convBuffer_size;
+    fftData = new std::complex<qreal>[fftLength];
 #endif
 
     FilterParameters param;
     param.freq1 = param.freq2 = 0;
     param.samplingRate = 44100;
-    param.size         = 1;
+    param.size         = 128;
     param.type         = Filter::FILTER_OFF;
     param.window_type  = Filter::WINDOW_RECT;
     param.fftTimer     = 100;
@@ -357,6 +360,23 @@ Generator::generateData(qint64 len) {
             fftwIn[convind][1] = 0;
         }
     }
+#else
+    fftTimer += (qreal)numSamples / 44100;
+    if (fftTimer > 0.001*filter->fftTimer) {
+        fftTimer = 0;
+        for (unsigned int convind = 0; convind < convBuffer_size; convind++) {
+            std::complex <qreal> v(convBuffer[convind], 0);
+            fftData[convind] = v;
+        }
+        FFTCompute(fftData, fftLength);
+        emit fftUpdate(fftData, convBuffer_size, 0);
+        for (unsigned int convind = 0; convind < convBuffer_size; convind++) {
+            std::complex <qreal> v(filtBuffer[convind], 0);
+            fftData[convind] = v;
+        }
+        FFTCompute(fftData, fftLength);
+        emit fftUpdate(fftData, convBuffer_size, 1);
+    }
 #endif
 
     // Convert data from qreal to qint16.
@@ -407,6 +427,16 @@ Generator::setFilter(FilterParameters &filtParam) {
     }
     fftw_execute(fftwPlan);
     emit fftUpdate(fftwOut, convBuffer_size, 2);
+#else
+    for (unsigned int convind = 0; convind < convImpulse_size; convind++) {
+        std::complex <qreal> v(2*(convBuffer_size/(M_PI*M_PI))*convImpulse[convind], 0);
+        fftData[convind] = v;
+    }
+    for (unsigned int convind = convImpulse_size; convind < fftLength; convind++) {
+        fftData[convind] = 0;
+    }
+    FFTCompute(fftData, fftLength);
+    emit fftUpdate(fftData, convBuffer_size, 2);
 #endif
     qDebug() << filtParam.fftTimer;
 }
