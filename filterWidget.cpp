@@ -29,7 +29,7 @@ FilterWidget::FilterWidget(QWidget *parent) : QWidget(parent) {
     filterParameters.type        = Filter::FILTER_OFF;
     filterParameters.window_type = Filter::WINDOW_RECT;
 
-    filterGroup = new QButtonGroup;
+    filterGroup = new QButtonGroup(this);
     offButton = new QRadioButton(tr("Through"));
     LPButton  = new QRadioButton(tr("Low-pass"));
     HPButton  = new QRadioButton(tr("High-pass"));
@@ -48,7 +48,7 @@ FilterWidget::FilterWidget(QWidget *parent) : QWidget(parent) {
 
     offButton->setChecked(true);
 
-    windowGroup = new QButtonGroup;
+    windowGroup = new QButtonGroup(this);
     RectButton     = new QRadioButton(tr("Rectangular"));
     HanningButton  = new QRadioButton(tr("Hanning"));
     HammingButton  = new QRadioButton(tr("Hamming"));
@@ -90,12 +90,12 @@ FilterWidget::FilterWidget(QWidget *parent) : QWidget(parent) {
     connect(freqSlider1, SIGNAL(valueChanged(int)), this, SLOT(setFreq1(int)));
     connect(freqSlider2, SIGNAL(valueChanged(int)), this, SLOT(setFreq2(int)));
 
-    sizeSpinBox = new QSpinBox;
+    sizeSpinBox = new QSpinBox(this);
     sizeSpinBox->setRange(10, 1000);
     sizeSpinBox->setValue(filterParameters.size);
     sizeLabel = new QLabel(tr("Filter Size :"));
 
-    fftTimeSpinBox = new QSpinBox;
+    fftTimeSpinBox = new QSpinBox(this);
     fftTimeSpinBox->setRange(25, 1000);
     fftTimeSpinBox->setValue(filterParameters.fftTimer);
     fftTimeSpinBox->setSuffix(tr(" ms"));

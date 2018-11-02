@@ -40,7 +40,7 @@ public:
 class KBWidget : public QWidget {
     Q_OBJECT
 public:
-    KBWidget();
+    KBWidget(QWidget *parent = 0);
     KBWidget(QVector<int> _channels,
              unsigned int _minnote = 33, unsigned int _maxnote = 120,
              QWidget *parent = 0);
