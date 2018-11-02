@@ -19,7 +19,7 @@
 #include <QDebug>
 
 PresetWidget::PresetWidget(QWidget *parent) : QWidget(parent) {
-    gridLayout = new QGridLayout;
+    gridLayout = new QGridLayout(this);
 
     buttonSinwave   = new QPushButton(tr("Sin Wave"));
     buttonElOrgan   = new QPushButton(tr("Electric Organ"));
@@ -35,7 +35,7 @@ PresetWidget::PresetWidget(QWidget *parent) : QWidget(parent) {
     gridLayout->addWidget(buttonSynthPad,  1, 1, 1, 1);
     gridLayout->addWidget(buttonSynthLead, 2, 1, 1, 1);
 
-    buttonGroup = new QButtonGroup;
+    buttonGroup = new QButtonGroup(this);
     buttonGroup->addButton(buttonSinwave);
     buttonGroup->addButton(buttonElOrgan);
     buttonGroup->addButton(buttonChOrgan);

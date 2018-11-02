@@ -133,7 +133,7 @@ KBWidget::KBWidget(QVector<int> _chanlist, unsigned int _minnote, unsigned int _
     nchans = chanlist.length();
 }
 
-KBWidget::KBWidget() {
+KBWidget::KBWidget(QWidget *parent) : QWidget(parent) {
     chanlist.clear();
     chanlist.push_back(1);
     minnote = 33;

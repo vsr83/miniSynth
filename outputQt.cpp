@@ -105,11 +105,17 @@ Generator::~Generator() {
     delete linSyn;
     delete [] convBuffer;
     delete [] convImpulse;
+    delete [] filtBuffer;
+    delete [] delayBuffer;
 
+    delete filter;
+    delete mod_waveform;
 #ifdef USE_FFTW
     fftw_destroy_plan(fftwPlan);
     fftw_free(fftwIn);
     fftw_free(fftwOut);
+#else
+    delete [] fftData;
 #endif
 }
 

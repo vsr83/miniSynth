@@ -30,11 +30,11 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent) {
 
-    timbreWidget   = new TimbreWidget(8);
-    waveformWidget = new WaveformWidget;
-    waveformPlot   = new WaveformPlot;
-    envelopeWidget = new ADSRWidget;
-    kbWidget       = new KBWidget;
+    timbreWidget   = new TimbreWidget(8, this);
+    waveformWidget = new WaveformWidget(this);
+    waveformPlot   = new WaveformPlot(this);
+    envelopeWidget = new ADSRWidget(this);
+    kbWidget       = new KBWidget(this);
 
     connect(waveformWidget, SIGNAL(modeSelected(int)),
             waveformPlot, SLOT(setMode(int)));
@@ -66,7 +66,7 @@ MainWindow::MainWindow(QWidget *parent)
     gridLayout->addWidget(timbreGroup, 1, 0, 1, 2);
 
 
-    modulationWidget = new ModulationWidget;
+    modulationWidget = new ModulationWidget(this);
     QGroupBox *modulationGroup = new QGroupBox(tr("Modulation"));
     QHBoxLayout *hbox4 = new QHBoxLayout;
     hbox4->addWidget(modulationWidget);
@@ -77,21 +77,21 @@ MainWindow::MainWindow(QWidget *parent)
     gridLayout->addWidget(kbWidget, 3, 0, 1, 2);
     gridLayout->setRowMinimumHeight(3, 100);
 
-    filterWidget = new FilterWidget;
+    filterWidget = new FilterWidget(this);
     QGroupBox *filterGroup = new QGroupBox(tr("Filter"));
     QHBoxLayout *hbox5 = new QHBoxLayout;
     hbox5->addWidget(filterWidget);
     filterGroup->setLayout(hbox5);
     gridLayout->addWidget(filterGroup, 2, 2, 1, 2);
 
-    reverbWidget = new ReverbWidget(44100);
+    reverbWidget = new ReverbWidget(44100, this);
     QGroupBox *reverbGroup = new QGroupBox(tr("Reverb"));
     QHBoxLayout *hbox6 = new QHBoxLayout;
     hbox6->addWidget(reverbWidget);
     reverbGroup->setLayout(hbox6);
     gridLayout->addWidget(reverbGroup, 3, 2, 1, 1);
 
-    presetWidget = new PresetWidget;
+    presetWidget = new PresetWidget(this);
     QGroupBox *presetGroup = new QGroupBox(tr("Presets"));
     QHBoxLayout *hbox7 = new QHBoxLayout;
     hbox7->addWidget(presetWidget);
@@ -133,8 +133,6 @@ MainWindow::MainWindow(QWidget *parent)
     m_device = QAudioDeviceInfo::defaultOutputDevice();
     m_buffer = QByteArray(bufferSize*2, 0);
 
-    m_audioOutput = 0;
-    delete m_audioOutput;
     m_audioOutput = new QAudioOutput(m_device, m_format, this);
     m_audioOutput->setBufferSize(bufferSize);
     m_generator   = new Generator(m_format, this);
@@ -192,5 +190,13 @@ MainWindow::setPreset(Preset &preset) {
 
 MainWindow::~MainWindow()
 {
-
+    m_audioOutput->stop();
+    m_generator->stop();
+    delete m_generator;
+    delete fftPlot;
+    delete m_audioOutput;
+#ifdef MIDI_ALSA
+    midiThread->stop();
+    delete midiThread;
+#endif
 }
