@@ -138,8 +138,9 @@ Generator::addWave(unsigned char note, unsigned char vel) {
     wav.state_age = 0;
     wav.age      = 0;
     wav.env = defaultEnv;
-
+    mutex.lock();
     waveList.push_back(wav);
+    mutex.unlock();
 }
 
 qint64
@@ -228,6 +229,7 @@ Generator::generateData(qint64 len) {
                    filteredData = QVector<qreal>(numSamples, 0);
 
     // All samples for each active note in waveList are synthesized separately.
+    mutex.lock();
     QMutableListIterator<Wave> i(waveList);
 
     while (i.hasNext()) {
@@ -305,7 +307,8 @@ Generator::generateData(qint64 len) {
             i.setValue(wav);
         }
     }
-
+    mutex.unlock();
+    
     for (unsigned int sample = 0; sample < numSamples; sample++) {
         convBuffer[convBuffer_ind] = synthData[sample];
         filteredData[sample] = 0;
@@ -323,7 +326,7 @@ Generator::generateData(qint64 len) {
         delayBuffer[delayBuffer_ind] = filteredData[sample];
         delayBuffer_ind = (delayBuffer_ind + 1) % delayBuffer_size;
 
-        // Primitive Reverb algorith.
+        // Primitive Reverb algorithm.
         if (rev.active) {
             qreal reverb = 0;
             unsigned int ind;

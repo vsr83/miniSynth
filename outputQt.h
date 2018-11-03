@@ -25,6 +25,7 @@
 
 #include <QList>
 #include <QMutableListIterator>
+#include <QMutex>
 
 #include "linearSynthesis.h"
 #include "ADSRenvelope.h"
@@ -124,6 +125,7 @@ private:
 
     qreal fftTimer;
 
+    QMutex mutex;
 #ifdef USE_FFTW
     fftw_complex *fftwIn, *fftwOut;
     fftw_plan     fftwPlan;
