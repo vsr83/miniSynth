@@ -119,7 +119,7 @@ MainWindow::MainWindow(QWidget *parent)
     bufferSize = 8192*2;
 
     m_format.setSampleRate(44100);
-    m_format.setChannelCount(1);
+    m_format.setChannelCount(2);
     m_format.setSampleSize(16);
     m_format.setCodec("audio/pcm");
     m_format.setByteOrder(QAudioFormat::LittleEndian);
@@ -131,6 +131,7 @@ MainWindow::MainWindow(QWidget *parent)
         m_format = info.nearestFormat(m_format);
     }
     m_device = QAudioDeviceInfo::defaultOutputDevice();
+    qWarning() << "Default device :" << m_device.deviceName();
     m_buffer = QByteArray(bufferSize*2, 0);
 
     m_audioOutput = new QAudioOutput(m_device, m_format, this);
